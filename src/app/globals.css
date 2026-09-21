@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  --gll-carbon: #1A1717;
+  --gll-grafito: #3D3A38;
+  --gll-piedra: #8C8884;
+  --gll-niebla: #E7E4DE;
+  --gll-rojo: #C81E3A;
+  --gll-vino: #6B1420;
+}
+
+@theme inline {
+  --color-gll-carbon: var(--gll-carbon);
+  --color-gll-grafito: var(--gll-grafito);
+  --color-gll-piedra: var(--gll-piedra);
+  --color-gll-niebla: var(--gll-niebla);
+  --color-gll-rojo: var(--gll-rojo);
+  --color-gll-vino: var(--gll-vino);
+
+  --font-sans: var(--font-ibm-plex);
+  --font-display: var(--font-bricolage);
+}
+
+body {
+  background-color: var(--gll-carbon);
+  color: var(--gll-niebla);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
