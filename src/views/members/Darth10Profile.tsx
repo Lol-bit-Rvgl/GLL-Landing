@@ -169,9 +169,9 @@ export function Darth10Profile({ member }: { member: Member }) {
   >(() => [
     // Esquina superior izquierda (sobre el poste superior)
     { id: 1, x: 12, y: 14, z: 10 },
-    // Esquina inferior derecha, apiladas en cascada
-    { id: 2, x: 74, y: 62, z: 11 },
-    { id: 3, x: 80, y: 72, z: 12 },
+    // Cascada lateral derecha superior/media (evita el reproductor inferior derecho)
+    { id: 2, x: 74, y: 32, z: 11 },
+    { id: 3, x: 80, y: 44, z: 12 },
   ]);
   const [rebooting, setRebooting] = useState(false);
   const [rebootDone, setRebootDone] = useState(false);
@@ -233,8 +233,8 @@ export function Darth10Profile({ member }: { member: Member }) {
       // reset a 3 ventanas iniciales
       setErrors([
         { id: 1, x: 12, y: 14, z: 10 },
-        { id: 2, x: 74, y: 62, z: 11 },
-        { id: 3, x: 80, y: 72, z: 12 },
+        { id: 2, x: 74, y: 32, z: 11 },
+        { id: 3, x: 80, y: 44, z: 12 },
       ]);
       nextId.current = 4;
       zCounter.current = 10;
@@ -296,7 +296,7 @@ export function Darth10Profile({ member }: { member: Member }) {
   }
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-black font-mono text-white">
+    <main className="relative min-h-screen overflow-hidden bg-black font-mono text-white">
       <style>{FX_STYLES}</style>
 
       {/* ── Imagen base 16:9 (img nativo, a prueba de fallos) ── */}
@@ -376,41 +376,42 @@ export function Darth10Profile({ member }: { member: Member }) {
         DESCONECTAR
       </SoundButton>
 
-      {/* ── Reproductor de Spotify Embed // Audio Feed Gamer ── */}
-      <div className="pointer-events-none relative z-10 flex min-h-screen flex-col items-center justify-start px-4 pt-16 sm:pt-20 pb-20">
-        {mounted && (
-          <div className="pointer-events-auto w-full max-w-xl mx-auto my-4 sm:my-8 rounded-xl overflow-hidden border border-cyan-900/50 bg-black/80 p-3 shadow-[0_0_25px_rgba(6,182,212,0.15)] backdrop-blur-md">
-            <div className="text-[10px] font-mono text-cyan-400 mb-2 px-1 flex items-center justify-between tracking-wider select-none">
-              <span className="flex items-center gap-2">
-                <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                [ CONSOLE AUDIO FEED // DARTH.10 MIX ]
-              </span>
-              <button
-                type="button"
-                onClick={() => setExpanded((prev) => !prev)}
-                className="text-xs text-neutral-500 hover:text-cyan-400 font-mono transition-colors cursor-pointer select-none"
-                title={expanded ? "Modo compacto (152px)" : "Ver lista completa (352px)"}
-              >
-                SPOTIFY EMBED {expanded ? "▲" : "▼"}
-              </button>
-            </div>
-            <iframe
-              style={{ borderRadius: "12px" }}
-              src="https://open.spotify.com/embed/playlist/6r0mw8mYkDRCyiDL4YVVC2?utm_source=generator&theme=0"
-              width="100%"
-              height={expanded ? "352" : "152"}
-              frameBorder="0"
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              loading="lazy"
-              title="Darth.10 Spotify Playlist"
-            />
+      {/* ── Reproductor de Spotify Embed // Esquina Inferior Derecha ── */}
+      {mounted && (
+        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 w-[calc(100vw-2rem)] sm:w-[400px] max-w-md rounded-xl overflow-hidden border border-cyan-900/50 bg-black/85 p-3 shadow-[0_0_25px_rgba(6,182,212,0.18)] backdrop-blur-md transition-all duration-300">
+          <div className="text-[10px] font-mono text-cyan-400 mb-2 px-1 flex items-center justify-between tracking-wider select-none">
+            <span className="flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+              [ CONSOLE AUDIO FEED // DARTH.10 MIX ]
+            </span>
+            <button
+              type="button"
+              onClick={() => setExpanded((prev) => !prev)}
+              className="text-xs text-neutral-400 hover:text-cyan-300 font-mono transition-colors cursor-pointer select-none"
+              title={expanded ? "Modo compacto (152px)" : "Ver lista completa (352px)"}
+            >
+              SPOTIFY EMBED {expanded ? "▲" : "▼"}
+            </button>
           </div>
-        )}
-      </div>
+          <iframe
+            style={{ borderRadius: "12px" }}
+            src="https://open.spotify.com/embed/playlist/6r0mw8mYkDRCyiDL4YVVC2?utm_source=generator&theme=0"
+            width="100%"
+            height={expanded ? "352" : "152"}
+            frameBorder="0"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+            title="Darth.10 Spotify Playlist"
+          />
+        </div>
+      )}
 
-      {/* ── Metadata técnica diminuta (sin tapar el arte) ─── */}
-      <div className="pointer-events-none fixed bottom-4 left-4 z-50 text-[9px] tracking-[0.25em] text-zinc-500">
-        [ SUBJECT: LAIN_IWAKURA // WIRED_ID: DARTH.10 ]
+      {/* ── Metadata técnica y telemetría (esquina inferior izquierda) ─── */}
+      <div className="pointer-events-none fixed bottom-4 left-4 z-50 flex flex-wrap items-center gap-3 text-[9px] tracking-[0.25em] text-zinc-500">
+        <span>[ SUBJECT: LAIN_IWAKURA // WIRED_ID: DARTH.10 ]</span>
+        <span className="text-red-500/70" style={{ fontVariantLigatures: "none" }}>
+          • {errors.length} ERROR(S) ACTIVE • MAX 40
+        </span>
       </div>
 
       {/* ── Ventanas de error ─────────────────────────────── */}
@@ -427,14 +428,6 @@ export function Darth10Profile({ member }: { member: Member }) {
           />
         ))}
       </div>
-
-      {/* ── Pie de corrupción ─────────────────────────────── */}
-      <p
-        className="pointer-events-none fixed bottom-4 right-4 z-50 text-[9px] tracking-[0.3em] text-red-500/60"
-        style={{ fontVariantLigatures: "none" }}
-      >
-        {errors.length} ERROR(S) ACTIVE • MAX 40
-      </p>
     </main>
   );
 }
