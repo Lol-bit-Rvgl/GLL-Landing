@@ -85,6 +85,9 @@ export function getMemberBySlug(slug: string): Member | undefined {
   if (slug === "mangle-drake") {
     return members.find((m) => m.slug === "mangle");
   }
+  if (slug === "darth") {
+    return members.find((m) => m.slug === "darth10");
+  }
   return members.find((m) => m.slug === slug);
 }
 

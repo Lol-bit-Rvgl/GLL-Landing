@@ -22,6 +22,7 @@ const MEMBER_COMPONENTS: Record<string, ComponentType<MemberViewProps>> = {
   darky: DarkyProfile,
   nothing: NothingProfile,
   darth10: Darth10Profile,
+  darth: Darth10Profile,
   dramatic: DramaticProfile,
   mangle: MangleProfile,
   "mangle-drake": MangleProfile,

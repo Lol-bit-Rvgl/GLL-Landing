@@ -176,9 +176,15 @@ export function Darth10Profile({ member }: { member: Member }) {
   const [rebooting, setRebooting] = useState(false);
   const [rebootDone, setRebootDone] = useState(false);
   const [showFlash, setShowFlash] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const nextId = useRef(4);
   const zCounter = useRef(10);
   const dragRef = useRef<{ id: number; offX: number; offY: number } | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const closeError = useCallback((id: number) => {
     setErrors((prev) => {
@@ -290,7 +296,7 @@ export function Darth10Profile({ member }: { member: Member }) {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-black font-mono text-white">
+    <main className="relative min-h-screen overflow-x-hidden bg-black font-mono text-white">
       <style>{FX_STYLES}</style>
 
       {/* ── Imagen base 16:9 (img nativo, a prueba de fallos) ── */}
@@ -369,6 +375,38 @@ export function Darth10Profile({ member }: { member: Member }) {
         <X className="size-3.5 transition-transform duration-300 group-hover:rotate-90" />
         DESCONECTAR
       </SoundButton>
+
+      {/* ── Reproductor de Spotify Embed // Audio Feed Gamer ── */}
+      <div className="pointer-events-none relative z-10 flex min-h-screen flex-col items-center justify-start px-4 pt-16 sm:pt-20 pb-20">
+        {mounted && (
+          <div className="pointer-events-auto w-full max-w-xl mx-auto my-4 sm:my-8 rounded-xl overflow-hidden border border-cyan-900/50 bg-black/80 p-3 shadow-[0_0_25px_rgba(6,182,212,0.15)] backdrop-blur-md">
+            <div className="text-[10px] font-mono text-cyan-400 mb-2 px-1 flex items-center justify-between tracking-wider select-none">
+              <span className="flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                [ CONSOLE AUDIO FEED // DARTH.10 MIX ]
+              </span>
+              <button
+                type="button"
+                onClick={() => setExpanded((prev) => !prev)}
+                className="text-xs text-neutral-500 hover:text-cyan-400 font-mono transition-colors cursor-pointer select-none"
+                title={expanded ? "Modo compacto (152px)" : "Ver lista completa (352px)"}
+              >
+                SPOTIFY EMBED {expanded ? "▲" : "▼"}
+              </button>
+            </div>
+            <iframe
+              style={{ borderRadius: "12px" }}
+              src="https://open.spotify.com/embed/playlist/6r0mw8mYkDRCyiDL4YVVC2?utm_source=generator&theme=0"
+              width="100%"
+              height={expanded ? "352" : "152"}
+              frameBorder="0"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+              title="Darth.10 Spotify Playlist"
+            />
+          </div>
+        )}
+      </div>
 
       {/* ── Metadata técnica diminuta (sin tapar el arte) ─── */}
       <div className="pointer-events-none fixed bottom-4 left-4 z-50 text-[9px] tracking-[0.25em] text-zinc-500">
