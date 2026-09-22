@@ -5,12 +5,14 @@ import "./globals.css";
 const ibmPlex = IBM_Plex_Sans({
   variable: "--font-ibm-plex",
   subsets: ["latin"],
+  display: "swap",
   weight: ["400", "500", "600", "700"],
 });
 
 const bricolage = Bricolage_Grotesque({
   variable: "--font-bricolage",
   subsets: ["latin"],
+  display: "swap",
   weight: ["400", "600", "700", "800"],
 });
 
