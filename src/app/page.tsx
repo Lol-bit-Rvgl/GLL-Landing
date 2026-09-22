@@ -1546,10 +1546,7 @@ export default function Home() {
       </div>
       <ParticlesBackground className="pointer-events-none fixed inset-0 z-0 h-full w-full opacity-20" />
 
-      {/* ── 1. TABLÓN DEL MANIFIESTO GLL (WELCOME BOARD) ──────── */}
-      <GllWelcomeBoard />
-
-      {/* ── 2. REPRODUCTOR RETRO WMP (PIEZA DE TRANSICIÓN) ───── */}
+      {/* ── 1. HERO SUPERIOR: REPRODUCTOR RETRO WMP ──────────── */}
       <RetroWmpHero
         isPlaying={isPlaying}
         setIsPlaying={setIsPlaying}
@@ -1558,6 +1555,9 @@ export default function Home() {
         isMuted={isMuted}
         setIsMuted={setIsMuted}
       />
+
+      {/* ── 2. TABLÓN DEL MANIFIESTO GLL (WELCOME BOARD) ──────── */}
+      <GllWelcomeBoard />
 
       {/* ── 3. SECCIÓN INFERIOR: EL ROSTER AUTÉNTICO ─────────── */}
       <section className="relative z-10 mx-auto mt-16 w-full max-w-7xl px-4 py-8 sm:px-6">
