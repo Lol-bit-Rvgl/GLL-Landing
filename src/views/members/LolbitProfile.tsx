@@ -79,6 +79,7 @@ interface IndexEntry {
   year: string;
   status: string;
   statusClass: string;
+  repoUrl: string;
   previewImage: string;
   telemetry: [string, string][];
   drawer: {
@@ -91,11 +92,12 @@ interface IndexEntry {
 const INDEX: IndexEntry[] = [
   {
     id: "01",
-    title: "KIWISOCIAL BACKEND",
+    title: "KYUBI SOCIAL BACKEND",
     tag: "API & INFRASTRUCTURE",
     year: "2026",
     status: "DEPLOYED",
     statusClass: "text-emerald-400",
+    repoUrl: "https://github.com/Lol-bit-Rvgl/Kyubi-Social-Backend",
     previewImage: "/images/projects/kiwi-back.jpg",
     telemetry: [
       ["RUNTIME", "Node.js / Express"],
@@ -104,14 +106,15 @@ const INDEX: IndexEntry[] = [
     ],
     drawer: {
       stack: [
-        "Node.js / Express",
+        "Node.js",
+        "Express",
         "PostgreSQL",
-        "JWT Authentication",
+        "JWT Auth",
         "WebSockets",
         "REST APIs",
       ],
       problem:
-        "Núcleo backend para red social distribuida. Gestión de autenticación segura, persistencia de sesiones, endpoints RESTful y comunicación bidireccional en tiempo real para mensajería y eventos.",
+        "Núcleo backend para la red social Kyubi. Gestión de sesiones, persistencia en base de datos, encriptación, endpoints RESTful y canales de sockets en tiempo real.",
       perf: [
         ["LATENCY", "< 25ms RTT"],
         ["AUTH", "Stateless JWT"],
@@ -121,27 +124,28 @@ const INDEX: IndexEntry[] = [
   },
   {
     id: "02",
-    title: "KIWISOCIAL FRONTEND",
+    title: "KYUBI SOCIAL FRONTEND",
     tag: "MOBILE CLIENT",
     year: "2026",
     status: "ACTIVE",
     statusClass: "text-[#f97316]",
+    repoUrl: "https://github.com/Lol-bit-Rvgl/Kyubi-Social-Frontend",
     previewImage: "/images/projects/kiwi-front.jpg",
     telemetry: [
       ["CORE", "Flutter / Dart"],
       ["STATE", "Riverpod"],
-      ["LAYOUT", "Defensive Slivers"],
+      ["LAYOUT", "CustomScrollView Slivers"],
     ],
     drawer: {
       stack: [
         "Flutter",
         "Dart",
-        "Riverpod / State Management",
-        "Defensive UI Layouts",
+        "Riverpod",
+        "CustomScrollView Slivers",
         "REST Integration",
       ],
       problem:
-        "Aplicación móvil multiplataforma. Arquitectura desacoplada, renderizado reactivo con CustomScrollView slivers, diseño defensivo para prevenir desbordes de viewport y consumo optimizado de microservicios.",
+        "Aplicación móvil multiplataforma para Kyubi Social. Manejo de estado desacoplado, layout defensivo contra desbordes de viewport y consumo optimizado de microservicios.",
       perf: [
         ["FRAME RATE", "60 / 120 FPS"],
         ["CACHE LAYER", "In-Memory State"],
@@ -151,11 +155,12 @@ const INDEX: IndexEntry[] = [
   },
   {
     id: "03",
-    title: "KIWISOCIAL LANDING",
+    title: "KYUBI SOCIAL LANDING",
     tag: "WEB PLATFORM",
     year: "2026",
     status: "ONLINE",
     statusClass: "text-emerald-400",
+    repoUrl: "https://github.com/Lol-bit-Rvgl/Kyubi-Social-landing",
     previewImage: "/images/projects/kiwi-landing.jpg",
     telemetry: [
       ["STACK", "Next.js / TypeScript"],
@@ -168,10 +173,10 @@ const INDEX: IndexEntry[] = [
         "TypeScript",
         "Tailwind CSS",
         "Framer Motion",
-        "SEO Optimization",
+        "SSG",
       ],
       problem:
-        "Portal web y punto de entrada para KiwiSocial. Enfoque editorial responsivo, animaciones dinámicas optimizadas por hardware y arquitectura estática prerenderizada.",
+        "Portal oficial y presentación web para el ecosistema Kyubi Social. Enfoque editorial responsivo, animaciones dinámicas aceleradas por hardware y prerenderizado estático.",
       perf: [
         ["LIGHTHOUSE", "99+ Perf"],
         ["HYDRATION", "Instant SSG"],
@@ -181,11 +186,12 @@ const INDEX: IndexEntry[] = [
   },
   {
     id: "04",
-    title: "PANDLEY LANDING",
+    title: "PANDLY LANDING",
     tag: "SHOWCASE & PRODUCT",
     year: "2025",
     status: "STABLE",
     statusClass: "text-cyan-400",
+    repoUrl: "https://github.com/Lol-bit-Rvgl/Pandly_Landing",
     previewImage: "/images/projects/pandley.jpg",
     telemetry: [
       ["CORE", "Next.js / React"],
@@ -201,7 +207,7 @@ const INDEX: IndexEntry[] = [
         "Interactive UX",
       ],
       problem:
-        "Plataforma web de presentación comercial y producto con diseño centrado en el usuario, interfaces de alto contraste y tiempos de carga reducidos.",
+        "Plataforma web de exhibición para Pandly, con interfaces modernas, alto rendimiento de carga y optimización de conversión.",
       perf: [
         ["LOAD TIME", "< 0.8s"],
         ["RESPONSIVE", "Fluid Grid"],
@@ -211,11 +217,12 @@ const INDEX: IndexEntry[] = [
   },
   {
     id: "05",
-    title: "HONEY",
+    title: "HONEY CYBERSECURITY",
     tag: "SECURITY & TELEMETRY",
     year: "2026",
     status: "LAB // DEFENSE",
     statusClass: "text-purple-400",
+    repoUrl: "https://github.com/SpringtraphackkZ/Honey-Cybersecurity",
     previewImage: "/images/projects/honey.jpg",
     telemetry: [
       ["DOMAIN", "Network Security"],
@@ -226,12 +233,12 @@ const INDEX: IndexEntry[] = [
       stack: [
         "Network Security",
         "Reverse Tunneling",
-        "Honeypot Architecture",
-        "Proxy Traps",
-        "Logging",
+        "Honeypot Traps",
+        "Telemetry",
+        "Forensic Logging",
       ],
       problem:
-        "Infraestructura experimental de seguridad perimetral y señuelo. Detección proactiva de intrusiones, monitoreo de tráfico anómalo y registro forense de vectores de ataque.",
+        "Entorno defensivo de ciberseguridad perimetral y honeypots. Detección proactiva de intrusiones no autorizadas, análisis de vectores de ataque y recolección forense de tráfico de red.",
       perf: [
         ["LOGGING", "Real-time Forensics"],
         ["INGRESS", "Zero Open Ports"],
@@ -384,52 +391,86 @@ function IndexRow({
   return (
     <li className="border-t border-neutral-800/80">
       {/* Strip horizontal */}
-      <button
-        onClick={onToggle}
+      <div
         onMouseEnter={() => onHover(entry)}
         onMouseLeave={() => onHover(null)}
-        aria-expanded={open}
-        className="group flex w-full items-baseline justify-between gap-4 py-8 text-left transition-colors duration-300 hover:text-[#f97316]"
+        className="group flex w-full items-baseline justify-between gap-3 py-8 text-left transition-colors duration-300 sm:gap-6"
       >
-        {/* Izquierda: número + título + micro-tag */}
-        <span className="flex min-w-0 items-baseline gap-4 sm:gap-6">
-          <span className="font-mono text-xs text-neutral-600 transition-colors group-hover:text-[#f97316]">
-            {entry.id}
-          </span>
-          <span className="min-w-0">
-            <span className="block truncate font-sans text-2xl font-medium tracking-tight text-white transition-colors group-hover:text-[#fdba74] sm:text-4xl">
-              {entry.title}
+        {/* Clickable area for expanding accordion */}
+        <button
+          onClick={onToggle}
+          aria-expanded={open}
+          className="flex min-w-0 flex-1 items-baseline justify-between gap-4 text-left transition-colors hover:text-[#f97316]"
+        >
+          {/* Izquierda: número + título + micro-tag */}
+          <span className="flex min-w-0 items-baseline gap-4 sm:gap-6">
+            <span className="font-mono text-xs text-neutral-600 transition-colors group-hover:text-[#f97316]">
+              {entry.id}
             </span>
-            <span className="mt-1 block font-mono text-[10px] tracking-[0.3em] text-neutral-500 uppercase transition-colors group-hover:text-[#f97316]/80">
-              {entry.tag}
+            <span className="min-w-0">
+              <span className="block truncate font-sans text-2xl font-medium tracking-tight text-white transition-colors group-hover:text-[#fdba74] sm:text-4xl">
+                {entry.title}
+              </span>
+              <span className="mt-1 block font-mono text-[10px] tracking-[0.3em] text-neutral-500 uppercase transition-colors group-hover:text-[#f97316]/80">
+                {entry.tag}
+              </span>
             </span>
           </span>
-        </span>
 
-        {/* Derecha: año / estado */}
-        <span className="flex shrink-0 items-baseline gap-4 font-mono text-[11px] tracking-widest sm:gap-6">
-          <span className="hidden text-neutral-600 sm:inline">{entry.year}</span>
-          <span className={entry.statusClass}>{entry.status}</span>
-          <ChevronDown
-            className={`h-3.5 w-3.5 text-neutral-600 transition-transform duration-500 ${
-              open ? "rotate-180 text-[#f97316]" : "group-hover:text-neutral-300"
-            }`}
-          />
-        </span>
-      </button>
+          {/* Derecha: año / estado */}
+          <span className="flex shrink-0 items-baseline gap-4 font-mono text-[11px] tracking-widest sm:gap-6">
+            <span className="hidden text-neutral-600 sm:inline">{entry.year}</span>
+            <span className={entry.statusClass}>{entry.status}</span>
+            <ChevronDown
+              className={`h-3.5 w-3.5 text-neutral-600 transition-transform duration-500 ${
+                open ? "rotate-180 text-[#f97316]" : "group-hover:text-neutral-300"
+              }`}
+            />
+          </span>
+        </button>
+
+        {/* Micro-icono ↗ a la derecha para acceso directo a GitHub */}
+        {entry.repoUrl && (
+          <a
+            href={entry.repoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={`View ${entry.title} on GitHub`}
+            className="flex shrink-0 items-center justify-center rounded p-1 text-neutral-600 transition-colors hover:text-[#f97316]"
+          >
+            <ExternalLink className="h-4 w-4" />
+          </a>
+        )}
+      </div>
 
       {/* Drawer / acordeón suave */}
       <div className={`lolbit-drawer ${open ? "open" : ""}`}>
         <div>
           <div className="grid grid-cols-1 gap-8 pb-10 pl-8 pr-2 sm:pl-12 md:grid-cols-3">
-            {/* Problema resuelto */}
-            <div className="md:col-span-2">
-              <p className="font-mono text-[10px] tracking-[0.3em] text-neutral-600 uppercase">
-                Case // Problem Solved
-              </p>
-              <p className="mt-3 max-w-xl text-sm leading-relaxed text-neutral-400">
-                {entry.drawer.problem}
-              </p>
+            {/* Problema resuelto + Botón de acceso a GitHub */}
+            <div className="md:col-span-2 flex flex-col justify-between">
+              <div>
+                <p className="font-mono text-[10px] tracking-[0.3em] text-neutral-600 uppercase">
+                  Case // Problem Solved
+                </p>
+                <p className="mt-3 max-w-xl text-sm leading-relaxed text-neutral-400">
+                  {entry.drawer.problem}
+                </p>
+              </div>
+
+              {entry.repoUrl && (
+                <div className="mt-6 pt-2">
+                  <a
+                    href={entry.repoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900/80 px-4 py-2 font-mono text-xs font-semibold text-[#f97316] transition-all hover:border-[#f97316] hover:bg-[#f97316]/10 hover:text-white"
+                  >
+                    <span>VIEW REPOSITORY ON GITHUB</span>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                </div>
+              )}
             </div>
 
             {/* Stack + telemetría de rendimiento */}
@@ -697,14 +738,108 @@ function InteractiveTerminal({
       );
     } else if (cmd === "projects") {
       output = (
-        <div className="space-y-1.5 text-xs text-neutral-300">
-          <p className="text-[#f97316] font-semibold tracking-wider uppercase">[ DEPLOYED ARCHITECTURES &amp; SYSTEMS ]</p>
-          <div className="space-y-1 pl-1">
-            <p><span className="font-bold text-white">01. KIWISOCIAL BACKEND</span> <span className="text-emerald-400 font-mono text-[10px]">[DEPLOYED]</span> — API &amp; Infrastructure (Node/Express, PostgreSQL, Sockets)</p>
-            <p><span className="font-bold text-white">02. KIWISOCIAL FRONTEND</span> <span className="text-[#f97316] font-mono text-[10px]">[ACTIVE]</span> — Mobile Client (Flutter, Riverpod, Slivers)</p>
-            <p><span className="font-bold text-white">03. KIWISOCIAL LANDING</span> <span className="text-emerald-400 font-mono text-[10px]">[ONLINE]</span> — Web Platform (Next.js, TS, Tailwind)</p>
-            <p><span className="font-bold text-white">04. PANDLEY LANDING</span> <span className="text-cyan-400 font-mono text-[10px]">[STABLE]</span> — Showcase &amp; Product (React, Responsive UX)</p>
-            <p><span className="font-bold text-white">05. HONEY</span> <span className="text-purple-400 font-mono text-[10px]">[LAB // DEFENSE]</span> — Security &amp; Telemetry (Reverse SSH, Honeypot)</p>
+        <div className="space-y-2 text-xs text-neutral-300">
+          <p className="text-[#f97316] font-semibold tracking-wider uppercase">[ DEPLOYED ARCHITECTURES &amp; REPOSITORIES ]</p>
+          <div className="space-y-2.5 pl-1 font-mono text-[11px]">
+            <div>
+              <p>
+                <span className="font-bold text-white">01. KYUBI SOCIAL BACKEND</span>{" "}
+                <span className="text-emerald-400 text-[10px]">[DEPLOYED]</span> — API &amp; Infrastructure
+              </p>
+              <p className="text-neutral-500 text-[10px] pl-3">
+                Stack: Node.js, Express, PostgreSQL, JWT Auth, WebSockets, REST APIs
+              </p>
+              <p className="pl-3">
+                <a
+                  href="https://github.com/Lol-bit-Rvgl/Kyubi-Social-Backend"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#f97316] hover:underline"
+                >
+                  github.com/Lol-bit-Rvgl/Kyubi-Social-Backend ↗
+                </a>
+              </p>
+            </div>
+
+            <div>
+              <p>
+                <span className="font-bold text-white">02. KYUBI SOCIAL FRONTEND</span>{" "}
+                <span className="text-[#f97316] text-[10px]">[ACTIVE]</span> — Mobile Client
+              </p>
+              <p className="text-neutral-500 text-[10px] pl-3">
+                Stack: Flutter, Dart, Riverpod, CustomScrollView Slivers, REST Integration
+              </p>
+              <p className="pl-3">
+                <a
+                  href="https://github.com/Lol-bit-Rvgl/Kyubi-Social-Frontend"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#f97316] hover:underline"
+                >
+                  github.com/Lol-bit-Rvgl/Kyubi-Social-Frontend ↗
+                </a>
+              </p>
+            </div>
+
+            <div>
+              <p>
+                <span className="font-bold text-white">03. KYUBI SOCIAL LANDING</span>{" "}
+                <span className="text-emerald-400 text-[10px]">[ONLINE]</span> — Web Platform
+              </p>
+              <p className="text-neutral-500 text-[10px] pl-3">
+                Stack: Next.js, TypeScript, Tailwind CSS, Framer Motion, SSG
+              </p>
+              <p className="pl-3">
+                <a
+                  href="https://github.com/Lol-bit-Rvgl/Kyubi-Social-landing"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#f97316] hover:underline"
+                >
+                  github.com/Lol-bit-Rvgl/Kyubi-Social-landing ↗
+                </a>
+              </p>
+            </div>
+
+            <div>
+              <p>
+                <span className="font-bold text-white">04. PANDLY LANDING</span>{" "}
+                <span className="text-cyan-400 text-[10px]">[STABLE]</span> — Showcase &amp; Product
+              </p>
+              <p className="text-neutral-500 text-[10px] pl-3">
+                Stack: Next.js, React, Tailwind CSS, Responsive Design, Interactive UX
+              </p>
+              <p className="pl-3">
+                <a
+                  href="https://github.com/Lol-bit-Rvgl/Pandly_Landing"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#f97316] hover:underline"
+                >
+                  github.com/Lol-bit-Rvgl/Pandly_Landing ↗
+                </a>
+              </p>
+            </div>
+
+            <div>
+              <p>
+                <span className="font-bold text-white">05. HONEY CYBERSECURITY</span>{" "}
+                <span className="text-purple-400 text-[10px]">[LAB // DEFENSE]</span> — Security &amp; Telemetry
+              </p>
+              <p className="text-neutral-500 text-[10px] pl-3">
+                Stack: Network Security, Reverse Tunneling, Honeypot Traps, Telemetry, Forensic Logging
+              </p>
+              <p className="pl-3">
+                <a
+                  href="https://github.com/SpringtraphackkZ/Honey-Cybersecurity"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#f97316] hover:underline"
+                >
+                  github.com/SpringtraphackkZ/Honey-Cybersecurity ↗
+                </a>
+              </p>
+            </div>
           </div>
         </div>
       );
