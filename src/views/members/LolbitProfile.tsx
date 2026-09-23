@@ -12,7 +12,7 @@ import {
   Copy,
   Check,
   ExternalLink,
-  Sparkles,
+  Zap,
   Send,
   X,
 } from "lucide-react";
@@ -683,7 +683,7 @@ function LolbitChatModal({ isOpen, onClose }: LolbitChatModalProps) {
     {
       role: "assistant",
       content:
-        "Hola. Soy Lolbit. Alter-ego digital, ente del ciberespacio y testigo de los desastres y genialidades de Paulo. ¿Qué traes entre manos hoy?",
+        "Runtime activo. Frecuencia sintonizada. ¿Qué necesitas consultar?",
     },
   ]);
   const [inputVal, setInputVal] = useState("");
@@ -754,24 +754,19 @@ function LolbitChatModal({ isOpen, onClose }: LolbitChatModalProps) {
         onClick={(e) => e.stopPropagation()}
         className="relative flex flex-col w-full max-w-xl rounded-2xl border border-neutral-800 bg-neutral-950/95 shadow-2xl backdrop-blur-xl overflow-hidden h-[580px] max-h-[90vh]"
       >
-        {/* Header */}
+        {/* Header diegético */}
         <div className="flex items-center justify-between border-b border-neutral-800/80 px-5 py-3.5 bg-neutral-900/60">
           <div className="flex items-center gap-3">
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-full border border-[#f97316]/50 bg-[#f97316]/15 text-[#f97316]">
-              <Sparkles className="h-4 w-4 animate-pulse" />
-              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-neutral-950" />
+            <div className="relative flex h-8 w-8 items-center justify-center rounded-full border border-amber-500/40 bg-amber-500/10 text-amber-500">
+              <Zap className="h-4 w-4" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-neutral-950" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-sans text-sm font-bold text-white tracking-tight">
-                  Lolbit Autonomous Core
-                </h3>
-                <span className="rounded border border-neutral-700/60 bg-neutral-800/60 px-1.5 py-0.5 font-mono text-[9px] font-semibold text-[#f97316]">
-                  POLY AI
-                </span>
-              </div>
-              <p className="font-mono text-[10px] text-neutral-400">
-                Groq Llama-3.3 • Carisma y dialéctica sin filtros
+              <h3 className="font-mono text-sm font-bold text-white tracking-tight">
+                LOLBIT // D-AVAR
+              </h3>
+              <p className="font-mono text-[10px] text-neutral-400 tracking-wider">
+                Dark Autonomous Virtual Assistant Runtime // v2.6
               </p>
             </div>
           </div>
@@ -1169,14 +1164,15 @@ export function LolbitProfile({ member }: { member: Member }) {
         </footer>
       </article>
 
-      {/* ══ PÍLDORA FLOTANTE 'HABLA CON LOLBIT' (FIXED BOTTOM RIGHT) ══ */}
+      {/* ══ PÍLDORA FLOTANTE DIEGÉTICA (FIXED BOTTOM RIGHT) ══ */}
       <button
         onClick={() => setIsChatOpen(true)}
-        className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2.5 rounded-full border border-[#f97316]/50 bg-neutral-950/90 px-4 py-2.5 font-mono text-xs font-medium text-neutral-200 shadow-[0_0_25px_rgba(249,115,22,0.25)] backdrop-blur-md transition-all hover:scale-105 hover:border-[#f97316] hover:bg-neutral-900 hover:text-white"
+        className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2.5 rounded-full bg-neutral-950/80 border border-neutral-800 hover:border-amber-500/40 text-neutral-300 text-xs font-mono py-2 px-3.5 shadow-2xl backdrop-blur-md transition-all hover:text-white"
+        title="Transmitir señal (Ctrl+K / ⌘K)"
       >
-        <Sparkles className="h-3.5 w-3.5 text-[#f97316] animate-pulse" />
-        <span>Habla con Lolbit // AI</span>
-        <kbd className="ml-1 rounded border border-neutral-700 bg-neutral-800/80 px-1.5 py-0.5 text-[10px] font-sans font-semibold text-neutral-300">
+        <Zap className="h-3.5 w-3.5 text-amber-500" />
+        <span>Transmitir señal</span>
+        <kbd className="ml-1 rounded border border-neutral-800 bg-neutral-900/90 px-1.5 py-0.5 text-[10px] font-sans font-semibold text-neutral-400">
           ⌘K
         </kbd>
       </button>
