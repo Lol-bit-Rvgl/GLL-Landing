@@ -15,6 +15,7 @@ import {
   Zap,
   Send,
   X,
+  Tv,
 } from "lucide-react";
 
 const FX_STYLES = `
@@ -65,6 +66,28 @@ const FX_STYLES = `
 }
 .lolbit-drawer > div {
   overflow: hidden;
+}
+
+/* CRT Scanlines Overlay */
+@keyframes lolbit-crt-flicker {
+  0% { opacity: 0.82; }
+  50% { opacity: 0.92; }
+  100% { opacity: 0.86; }
+}
+.lolbit-crt-overlay {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%,
+    rgba(0, 0, 0, 0.35) 50%
+  ),
+  linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.02),
+    rgba(0, 255, 0, 0.01),
+    rgba(0, 0, 255, 0.02)
+  );
+  background-size: 100% 3px, 6px 100%;
+  animation: lolbit-crt-flicker 0.15s infinite;
+  pointer-events: none;
 }
 `;
 
@@ -897,6 +920,7 @@ export function LolbitProfile({ member }: { member: Member }) {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [crtScanlines, setCrtScanlines] = useState(true);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
 
@@ -988,6 +1012,14 @@ export function LolbitProfile({ member }: { member: Member }) {
       return next;
     });
   }, []);
+
+  const toggleCrt = useCallback(() => {
+    setCrtScanlines((prev) => {
+      const next = !prev;
+      playClick(next ? 1100 : 620, 0.025);
+      return next;
+    });
+  }, [playClick]);
 
   useEffect(() => {
     setMounted(true);
@@ -1105,12 +1137,20 @@ export function LolbitProfile({ member }: { member: Member }) {
         }}
       />
 
+      {/* ══ CRT SCANLINES FILTER (TOGGLEABLE) ══ */}
+      {crtScanlines && (
+        <div
+          aria-hidden="true"
+          className="lolbit-crt-overlay pointer-events-none fixed inset-0 z-30 opacity-70"
+        />
+      )}
+
       {/* Visor flotante que sigue al cursor */}
       <FloatingPreview entry={hovered} />
 
       <article className="relative z-10 mx-auto max-w-5xl px-6 pb-24 pt-16 sm:pt-24">
-        {/* ══ TOP BAR ULTRA LIMPIA ══ */}
-        <header className="flex items-center justify-between border-b border-neutral-800/80 pb-5 font-mono text-[11px] tracking-widest">
+        {/* ══ TOP BAR ULTRA LIMPIA & TÁCTICA ══ */}
+        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-800/80 pb-5 font-mono text-[11px] tracking-widest">
           <Link
             href="/"
             className="group inline-flex items-center gap-2 text-neutral-500 transition-colors hover:text-[#f97316]"
@@ -1119,12 +1159,45 @@ export function LolbitProfile({ member }: { member: Member }) {
             <span>[ ← BACK // GLL SECTOR ZERO ]</span>
           </Link>
 
-          <div className="flex items-center gap-4 sm:gap-6">
+          {/* Widgets mecánicos interactivos en la cabecera */}
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-4">
+            {/* Micro-widget de telemetría de red: PING RTT */}
+            <div className="inline-flex items-center gap-2 rounded border border-neutral-800/80 bg-black/60 px-2.5 py-1 text-neutral-400 shadow-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              </span>
+              <span>
+                PING:{" "}
+                <span className="font-semibold text-emerald-400 tabular-nums">
+                  {telemetry.latencyMs !== null ? `${telemetry.latencyMs}ms` : "SCANNING"}
+                </span>
+                <span className="text-neutral-600"> // RTT</span>
+              </span>
+            </div>
+
+            {/* Toggle táctico CRT SCANLINES */}
+            <button
+              onClick={toggleCrt}
+              aria-pressed={crtScanlines}
+              className="inline-flex items-center gap-1.5 rounded border border-neutral-800/80 bg-black/60 px-2.5 py-1 text-neutral-400 transition-colors hover:border-amber-500/40 hover:text-neutral-200 shadow-sm"
+              title="Alternar filtro analógico CRT Scanlines"
+            >
+              <Tv className="h-3 w-3 text-[#f97316]" />
+              <span>
+                CRT SCANLINES:{" "}
+                <span className={crtScanlines ? "text-[#f97316] font-semibold" : "text-neutral-600"}>
+                  {crtScanlines ? "[ON]" : "[OFF]"}
+                </span>
+              </span>
+            </button>
+
             {/* Micro-toggle AUDIO */}
             <button
               onClick={toggleAudio}
               aria-pressed={audio}
-              className="inline-flex items-center gap-1.5 text-neutral-500 transition-colors hover:text-neutral-200"
+              className="inline-flex items-center gap-1.5 rounded border border-neutral-800/80 bg-black/60 px-2.5 py-1 text-neutral-400 transition-colors hover:border-amber-500/40 hover:text-neutral-200 shadow-sm"
+              title="Alternar micro-sonidos sintetizados"
             >
               {audio ? (
                 <Volume2 className="h-3 w-3 text-[#f97316]" />
@@ -1132,12 +1205,15 @@ export function LolbitProfile({ member }: { member: Member }) {
                 <VolumeX className="h-3 w-3" />
               )}
               <span>
-                AUDIO: <span className={audio ? "text-[#f97316]" : ""}>{audio ? "[ON]" : "[OFF]"}</span>
+                AUDIO:{" "}
+                <span className={audio ? "text-[#f97316] font-semibold" : "text-neutral-600"}>
+                  {audio ? "[ON]" : "[OFF]"}
+                </span>
               </span>
             </button>
 
             {/* Reloj local + nodo */}
-            <span className="hidden items-center gap-2 text-neutral-500 sm:inline-flex">
+            <span className="hidden items-center gap-2 text-neutral-500 xl:inline-flex">
               <span className="lolbit-dot h-1.5 w-1.5 rounded-full bg-[#f97316]" />
               <span className="text-neutral-300 tabular-nums">{clock}</span>
               <span className="text-neutral-600">// 0x7F</span>
@@ -1156,12 +1232,21 @@ export function LolbitProfile({ member }: { member: Member }) {
           </h1>
         </div>
 
-        {/* Sub-statement editorial */}
-        <p className="max-w-3xl pb-8 pt-6 text-xl font-normal leading-relaxed text-neutral-400 md:text-2xl">
-          Autonomous Runtime // Ethical Dev. Designing resilient digital
-          structures, deconstructing systems and orchestrating autonomous
-          realities — {member.role.toLowerCase()}.
+        {/* Sub-statement editorial (auténtico, humano y técnico) */}
+        <p className="max-w-4xl pt-6 text-lg sm:text-2xl md:text-[1.65rem] font-normal leading-relaxed text-neutral-300">
+          Programador autodidacta, femboy y entusiasta del caos digital. Construyo software, desmonto sockets y levanto arquitecturas más por la satisfacción de verlas funcionar que por cualquier otra cosa. Crecí entre físicas de radio-control en Re-Volt, madrugadas experimentando con layouts en Flutter y la vibra de estática CRT de Five Nights at Freddy’s. No me tomo la vida demasiado en serio, pero trato el código con precisión quirúrgica.
         </p>
+
+        {/* Micro-tags inferiores */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-4 pb-16 font-mono text-xs text-neutral-500">
+          <span className="text-neutral-400">[ AUTODIDACT // DART &amp; TYPESCRIPT ]</span>
+          <span className="text-neutral-700">·</span>
+          <span className="text-neutral-400">[ RE-VOLT RC ENTHUSIAST ]</span>
+          <span className="text-neutral-700">·</span>
+          <span className="text-neutral-400">[ ANALOG CRT VIBES ]</span>
+          <span className="text-neutral-700">·</span>
+          <span className="text-neutral-400">[ CODE FOR JOY ]</span>
+        </div>
 
         {/* ══ TELEMETRÍA REAL DEL DISPOSITIVO DEL VISITANTE (HUD) ══ */}
         <div className="mb-16 rounded-xl border border-neutral-800/80 bg-black/60 p-4 font-mono text-xs shadow-lg backdrop-blur-md">
@@ -1243,14 +1328,14 @@ export function LolbitProfile({ member }: { member: Member }) {
           {/* Display Email Masivo con botón de copiado */}
           <div className="flex flex-wrap items-baseline gap-4 sm:gap-6">
             <a
-              href="mailto:gdlolbit005@gmail.com"
+              href="mailto:imaginebeinglolbit@gmail.com"
               className="text-4xl sm:text-6xl md:text-7xl font-sans font-medium text-white tracking-tighter hover:text-amber-500 transition-colors inline-block"
             >
-              gdlolbit005@gmail.com
+              imaginebeinglolbit@gmail.com
             </a>
 
             <button
-              onClick={() => copyText("gdlolbit005@gmail.com", "email")}
+              onClick={() => copyText("imaginebeinglolbit@gmail.com", "email")}
               className="inline-flex items-center gap-1.5 rounded-full border border-neutral-800 bg-neutral-900/80 px-3.5 py-1.5 font-mono text-xs text-neutral-400 transition-all hover:border-amber-500 hover:text-white"
               title="Copiar email"
             >
