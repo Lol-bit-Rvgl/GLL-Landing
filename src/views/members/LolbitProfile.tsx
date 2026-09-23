@@ -120,7 +120,7 @@ const INDEX: IndexEntry[] = [
     status: "DEPLOYED",
     statusClass: "text-emerald-400",
     repoUrl: "https://github.com/Lol-bit-Rvgl/Kyubi-Social-Backend",
-    previewImage: "/images/projects/kiwi-back.jpg",
+    previewImage: "/images/projects/kyubi-backend.png",
     telemetry: [
       ["RUNTIME", "Node.js / Express"],
       ["DATABASE", "PostgreSQL"],
@@ -152,7 +152,7 @@ const INDEX: IndexEntry[] = [
     status: "ACTIVE",
     statusClass: "text-[#f97316]",
     repoUrl: "https://github.com/Lol-bit-Rvgl/Kyubi-Social-Frontend",
-    previewImage: "/images/projects/kiwi-front.jpg",
+    previewImage: "/images/projects/kyubi-frontend.png",
     telemetry: [
       ["CORE", "Flutter / Dart"],
       ["STATE", "Riverpod"],
@@ -183,7 +183,7 @@ const INDEX: IndexEntry[] = [
     status: "ONLINE",
     statusClass: "text-emerald-400",
     repoUrl: "https://github.com/Lol-bit-Rvgl/Kyubi-Social-landing",
-    previewImage: "/images/projects/kiwi-landing.jpg",
+    previewImage: "/images/projects/kyubi-landing.png",
     telemetry: [
       ["STACK", "Next.js / TypeScript"],
       ["STYLE", "Tailwind CSS"],
@@ -214,7 +214,7 @@ const INDEX: IndexEntry[] = [
     status: "STABLE",
     statusClass: "text-cyan-400",
     repoUrl: "https://github.com/Lol-bit-Rvgl/Pandly_Landing",
-    previewImage: "/images/projects/pandley.jpg",
+    previewImage: "/images/projects/pandly-landing.png",
     telemetry: [
       ["CORE", "Next.js / React"],
       ["STYLE", "Tailwind CSS"],
@@ -245,7 +245,7 @@ const INDEX: IndexEntry[] = [
     status: "LAB // DEFENSE",
     statusClass: "text-purple-400",
     repoUrl: "https://github.com/SpringtraphackkZ/Honey-Cybersecurity",
-    previewImage: "/images/projects/honey.jpg",
+    previewImage: "/images/projects/honey-security.png",
     telemetry: [
       ["DOMAIN", "Network Security"],
       ["TUNNEL", "Reverse SSH"],
@@ -340,12 +340,19 @@ function FloatingPreview({ entry }: { entry: IndexEntry | null }) {
           {entry && (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
+              key={entry.previewImage}
               src={entry.previewImage}
               alt={entry.title}
+              loading="eager"
+              onLoad={(e) => {
+                const img = e.currentTarget;
+                img.style.transition = "opacity 0.25s ease-in-out";
+                img.style.opacity = "0.75";
+              }}
               onError={(e) => {
                 (e.target as HTMLElement).style.display = "none";
               }}
-              className="absolute inset-0 h-full w-full object-cover opacity-75"
+              className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
           )}
           {/* Fallback gráfico / placeholder si el asset aún no se ha subido */}
