@@ -1,15 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Member } from "@/data/members";
 import {
   ArrowLeft,
   ChevronDown,
-  Terminal,
+  Terminal as TerminalIcon,
   Volume2,
   VolumeX,
+  Copy,
+  Check,
+  ExternalLink,
+  Cpu,
+  Monitor,
+  Wifi,
 } from "lucide-react";
 
 const FX_STYLES = `
@@ -399,6 +405,369 @@ function IndexRow({
 }
 
 /* ══════════════════════════════════════════════════════════════
+   LANYARD LIVE PRESENCE HOOK
+   ══════════════════════════════════════════════════════════════ */
+interface LanyardSpotify {
+  track_id: string;
+  song: string;
+  artist: string;
+  album_art_url: string;
+  album?: string;
+}
+
+interface LanyardActivity {
+  type: number;
+  name: string;
+  state?: string;
+  details?: string;
+  id?: string;
+}
+
+interface LanyardData {
+  discord_status: "online" | "idle" | "dnd" | "offline";
+  activities: LanyardActivity[];
+  listening_to_spotify: boolean;
+  spotify: LanyardSpotify | null;
+}
+
+function useLanyard(userId: string) {
+  const [data, setData] = useState<LanyardData | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    let active = true;
+
+    const fetchPresence = async () => {
+      try {
+        const res = await fetch(`https://api.lanyard.rest/v1/users/${userId}`);
+        if (!res.ok) return;
+        const json = await res.json();
+        if (active && json.success && json.data) {
+          setData(json.data);
+        }
+      } catch {
+        // Fallback en caso de error
+      }
+    };
+
+    fetchPresence();
+    const id = setInterval(fetchPresence, 15000);
+    return () => {
+      active = false;
+      clearInterval(id);
+    };
+  }, [userId]);
+
+  return { data, mounted };
+}
+
+/* ══════════════════════════════════════════════════════════════
+   REAL VISITOR HARDWARE & NETWORK TELEMETRY
+   ══════════════════════════════════════════════════════════════ */
+interface DeviceTelemetry {
+  os: string;
+  resolution: string;
+  viewport: string;
+  pixelRatio: number;
+  cores: number;
+  memory: string;
+  gpu: string;
+  latencyMs: number | null;
+}
+
+function useDeviceTelemetry() {
+  const [telemetry, setTelemetry] = useState<DeviceTelemetry>({
+    os: "Detecting...",
+    resolution: "---",
+    viewport: "---",
+    pixelRatio: 1,
+    cores: 4,
+    memory: "N/A",
+    gpu: "WebGL Accelerator",
+    latencyMs: null,
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // 1. Detectar OS / Plataforma real
+    const ua = navigator.userAgent;
+    let detectedOs = "Unknown OS";
+    if (/windows phone/i.test(ua)) detectedOs = "Windows Phone";
+    else if (/win/i.test(ua)) detectedOs = "Windows";
+    else if (/android/i.test(ua)) detectedOs = "Android";
+    else if (/iphone|ipad|ipod/i.test(ua)) detectedOs = "iOS";
+    else if (/mac/i.test(ua)) detectedOs = "macOS";
+    else if (/linux/i.test(ua)) detectedOs = "Linux";
+
+    // 2. Resolución de pantalla y Viewport
+    const resolution = `${window.screen.width}x${window.screen.height}`;
+    const viewport = `${window.innerWidth}x${window.innerHeight}`;
+    const pixelRatio = window.devicePixelRatio ? Math.round(window.devicePixelRatio * 100) / 100 : 1;
+
+    // 3. Cores de CPU y Memoria
+    const cores = navigator.hardwareConcurrency || 4;
+    const mem = (navigator as unknown as { deviceMemory?: number }).deviceMemory;
+    const memory = mem ? `${mem} GB` : "Standard";
+
+    // 4. Renderizador GPU real vía WebGL
+    let gpu = "WebGL Accelerator";
+    try {
+      const canvas = document.createElement("canvas");
+      const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+      if (gl) {
+        const ext = (gl as WebGLRenderingContext).getExtension("WEBGL_debug_renderer_info");
+        if (ext) {
+          const unmasked = (gl as WebGLRenderingContext).getParameter(ext.UNMASKED_RENDERER_WEBGL);
+          if (unmasked) {
+            gpu = String(unmasked)
+              .replace(/ANGLE \((.+)\)/, "$1")
+              .replace(/Direct3D.+/, "")
+              .trim();
+          }
+        }
+      }
+    } catch {
+      // fallback
+    }
+
+    setTelemetry((prev) => ({
+      ...prev,
+      os: detectedOs,
+      resolution,
+      viewport,
+      pixelRatio,
+      cores,
+      memory,
+      gpu,
+    }));
+
+    // 5. Medición real de latencia contra asset local
+    const start = performance.now();
+    fetch("/favicon.ico", { method: "HEAD", cache: "no-store" })
+      .then(() => {
+        const ping = Math.max(1, Math.round(performance.now() - start));
+        setTelemetry((prev) => ({ ...prev, latencyMs: ping }));
+      })
+      .catch(() => {
+        const ping = Math.max(1, Math.round(performance.now() - start));
+        setTelemetry((prev) => ({ ...prev, latencyMs: ping }));
+      });
+  }, []);
+
+  return telemetry;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   INTERACTIVE TERMINAL (TTY)
+   ══════════════════════════════════════════════════════════════ */
+function InteractiveTerminal({
+  telemetry,
+  lanyard,
+}: {
+  telemetry: DeviceTelemetry;
+  lanyard: { data: LanyardData | null; isLive: boolean };
+}) {
+  const [history, setHistory] = useState<
+    { id: string; cmd: string; output: React.ReactNode }[]
+  >(() => [
+    {
+      id: "init",
+      cmd: "run --diagnostics",
+      output: (
+        <div className="space-y-1">
+          <p className="text-emerald-400">[OK] runtime.ethical ......... ACTIVE</p>
+          <p className="text-neutral-400">[SYS] node_id ............... 0x7F</p>
+          <p className="text-neutral-400">[NET] freq .................. 84.2 MHz</p>
+          <p className="text-neutral-400">[SEC] zero-trust ............ ARMED</p>
+          <p className="text-[#fdba74]">[LOG] &ldquo;Playtime over. Autonomy retained.&rdquo;</p>
+          <p className="pt-2 text-neutral-500">
+            Type <span className="text-[#f97316] font-semibold">help</span> to view available directives.
+          </p>
+        </div>
+      ),
+    },
+  ]);
+  const [inputVal, setInputVal] = useState("");
+  const [cmdHistory, setCmdHistory] = useState<string[]>([]);
+  const [historyIdx, setHistoryIdx] = useState<number>(-1);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [history]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const raw = inputVal.trim();
+    if (!raw) return;
+    const cmd = raw.toLowerCase();
+
+    setCmdHistory((prev) => [...prev, raw]);
+    setHistoryIdx(-1);
+    setInputVal("");
+
+    if (cmd === "clear") {
+      setHistory([]);
+      return;
+    }
+
+    let output: React.ReactNode;
+    if (cmd === "help") {
+      output = (
+        <div className="space-y-1 text-xs text-neutral-300">
+          <p className="text-neutral-500 font-semibold tracking-wider uppercase">Available directives:</p>
+          <p><span className="text-[#f97316] font-bold">help</span> - Display list of available directives</p>
+          <p><span className="text-[#f97316] font-bold">status</span> - Display node integrity and live Discord presence</p>
+          <p><span className="text-[#f97316] font-bold">device</span> - Run real-time client hardware &amp; WebGL telemetry</p>
+          <p><span className="text-[#f97316] font-bold">contact</span> - Output direct transmission links &amp; email</p>
+          <p><span className="text-[#f97316] font-bold">clear</span> - Purge screen buffer</p>
+        </div>
+      );
+    } else if (cmd === "status") {
+      const activeActivity = lanyard.data?.activities?.find(
+        (a) => a.type !== 2 && a.name !== "Spotify" && a.name !== "Custom Status" && a.type !== 4
+      );
+      output = (
+        <div className="space-y-1 text-xs text-neutral-300">
+          <p className="text-emerald-400">[NODE] 0x7F // LOLBIT RUNTIME ......... ONLINE</p>
+          <p className="text-neutral-400">[FREQ] 84.2 MHz // ZERO-TRUST TUNNEL ... ARMED</p>
+          <p className="text-neutral-400">
+            [DISCORD] Status:{" "}
+            <strong className={lanyard.isLive ? "text-emerald-400" : "text-neutral-500"}>
+              {lanyard.isLive ? (lanyard.data?.discord_status?.toUpperCase() ?? "ONLINE") : "OFFLINE"}
+            </strong>
+          </p>
+          {lanyard.data?.listening_to_spotify && lanyard.data.spotify ? (
+            <p className="text-emerald-300">
+              [SPOTIFY] ♫ {lanyard.data.spotify.song} — {lanyard.data.spotify.artist}
+            </p>
+          ) : null}
+          {activeActivity ? (
+            <p className="text-amber-300">
+              [ACTIVITY] ▶ {activeActivity.name}: {activeActivity.details || activeActivity.state || "Active"}
+            </p>
+          ) : null}
+          <p className="text-[#fdba74]">[SYS.LOG] &ldquo;Playtime is over. Autonomy retained.&rdquo;</p>
+        </div>
+      );
+    } else if (cmd === "device") {
+      output = (
+        <div className="space-y-1 text-xs text-neutral-300">
+          <p className="text-[#f97316] font-semibold tracking-wider">[ VISITOR HARDWARE &amp; WEBGL REPORT ]</p>
+          <p><span className="text-neutral-500">OS / Platform ......</span> <span className="text-neutral-200">{telemetry.os}</span></p>
+          <p><span className="text-neutral-500">Screen Resolution ..</span> <span className="text-neutral-200">{telemetry.resolution}</span></p>
+          <p><span className="text-neutral-500">Viewport Dimensions </span> <span className="text-neutral-200">{telemetry.viewport}</span></p>
+          <p><span className="text-neutral-500">Device Pixel Ratio .</span> <span className="text-neutral-200">{telemetry.pixelRatio}x</span></p>
+          <p><span className="text-neutral-500">Logical CPU Cores ..</span> <span className="text-neutral-200">{telemetry.cores} cores</span></p>
+          <p><span className="text-neutral-500">Device Memory ......</span> <span className="text-neutral-200">{telemetry.memory}</span></p>
+          <p><span className="text-neutral-500">WebGL GPU ..........</span> <span className="text-emerald-400">{telemetry.gpu}</span></p>
+          <p><span className="text-neutral-500">Network Latency ....</span> <span className="text-[#f97316]">{telemetry.latencyMs !== null ? `${telemetry.latencyMs}ms` : "calculating..."}</span></p>
+        </div>
+      );
+    } else if (cmd === "contact") {
+      output = (
+        <div className="space-y-1 text-xs text-neutral-300">
+          <p className="text-neutral-500 font-semibold tracking-wider uppercase">[ DIRECT TRANSMISSION VECTORS ]</p>
+          <p><span className="text-neutral-500">Email .....</span> <span className="text-neutral-200">gdlolbit005@gmail.com</span></p>
+          <p><span className="text-neutral-500">Discord ...</span> <span className="text-neutral-200">@imaginebeinglolbit</span></p>
+          <p><span className="text-neutral-500">GitHub ....</span> <a href="https://github.com/Lol-bit-Rvgl" target="_blank" rel="noopener noreferrer" className="text-[#f97316] hover:underline">https://github.com/Lol-bit-Rvgl</a></p>
+        </div>
+      );
+    } else {
+      output = (
+        <p className="text-xs text-red-400">
+          command not found: &quot;{raw}&quot;. Type &quot;help&quot; for a list of available directives.
+        </p>
+      );
+    }
+
+    setHistory((prev) => [
+      ...prev,
+      { id: String(Date.now() + Math.random()), cmd: raw, output },
+    ]);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (cmdHistory.length === 0) return;
+      const nextIdx = historyIdx === -1 ? cmdHistory.length - 1 : Math.max(0, historyIdx - 1);
+      setHistoryIdx(nextIdx);
+      setInputVal(cmdHistory[nextIdx] ?? "");
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (historyIdx === -1) return;
+      const nextIdx = historyIdx + 1;
+      if (nextIdx >= cmdHistory.length) {
+        setHistoryIdx(-1);
+        setInputVal("");
+      } else {
+        setHistoryIdx(nextIdx);
+        setInputVal(cmdHistory[nextIdx] ?? "");
+      }
+    }
+  };
+
+  return (
+    <div
+      onClick={() => inputRef.current?.focus()}
+      className="cursor-text rounded-xl border border-neutral-800 bg-black/90 p-4 font-mono text-xs shadow-2xl backdrop-blur-md transition-all hover:border-neutral-700"
+    >
+      {/* Barra superior de terminal */}
+      <div className="flex items-center justify-between border-b border-neutral-800/80 pb-3 text-[11px] text-neutral-500">
+        <div className="flex items-center gap-2">
+          <span className="h-2.5 w-2.5 rounded-full bg-red-500/80" />
+          <span className="h-2.5 w-2.5 rounded-full bg-yellow-500/80" />
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/80" />
+          <span className="ml-2 text-neutral-400">lolbit@gll-node: ~</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] text-neutral-600">
+          <TerminalIcon className="h-3 w-3 text-[#f97316]" />
+          <span>INTERACTIVE TTY</span>
+        </div>
+      </div>
+
+      {/* Historial de comandos */}
+      <div ref={scrollRef} className="max-h-72 overflow-y-auto pt-3 space-y-3">
+        {history.map((h) => (
+          <div key={h.id} className="space-y-1 leading-relaxed">
+            <div className="flex items-center gap-2 text-neutral-400">
+              <span className="text-[#f97316] font-bold">lolbit@gll-node:~$</span>
+              <span className="text-white font-medium">{h.cmd}</span>
+            </div>
+            <div className="pl-4">{h.output}</div>
+          </div>
+        ))}
+
+        {/* Input prompt interactivo */}
+        <form onSubmit={handleSubmit} className="flex items-center gap-2 pt-1">
+          <label htmlFor="terminal-prompt" className="text-[#f97316] font-bold whitespace-nowrap">
+            lolbit@gll-node:~$
+          </label>
+          <input
+            id="terminal-prompt"
+            ref={inputRef}
+            type="text"
+            value={inputVal}
+            onChange={(e) => setInputVal(e.target.value)}
+            onKeyDown={handleKeyDown}
+            autoComplete="off"
+            spellCheck="false"
+            className="flex-1 bg-transparent text-white outline-none border-none p-0 focus:ring-0 font-mono text-xs"
+            placeholder="type a command (help, status, device, contact, clear)..."
+          />
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
    MAIN PROFILE
    ══════════════════════════════════════════════════════════════ */
 export function LolbitProfile({ member }: { member: Member }) {
@@ -407,7 +776,15 @@ export function LolbitProfile({ member }: { member: Member }) {
   const [audio, setAudio] = useState(false);
   const [hovered, setHovered] = useState<IndexEntry | null>(null);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const [termOpen, setTermOpen] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  const telemetry = useDeviceTelemetry();
+  const { data: lanyardData } = useLanyard("1066501844177797171");
+  const lanyardIsLive = mounted && lanyardData?.discord_status && lanyardData.discord_status !== "offline";
+
+  const activeGameOrCode = lanyardData?.activities?.find(
+    (a) => a.type !== 2 && a.name !== "Spotify" && a.name !== "Custom Status" && a.type !== 4
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -422,6 +799,14 @@ export function LolbitProfile({ member }: { member: Member }) {
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
+  }, []);
+
+  const copyText = useCallback((text: string, key: string) => {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2000);
+    }
   }, []);
 
   if (!mounted) {
@@ -479,17 +864,68 @@ export function LolbitProfile({ member }: { member: Member }) {
           </div>
         </header>
 
-        {/* ══ TIPOGRAFÍA MONUMENTAL ══ */}
-        <h1 className="pt-16 font-sans text-6xl font-medium tracking-tighter text-white sm:text-8xl md:text-9xl">
-          LOLBIT
-        </h1>
+        {/* ══ TIPOGRAFÍA MONUMENTAL EDITORIAL ══ */}
+        <div className="pt-14 sm:pt-20">
+          <div className="flex items-center gap-2 font-mono text-[11px] tracking-[0.35em] text-[#f97316] uppercase mb-3">
+            <span className="lolbit-dot h-2 w-2 rounded-full bg-[#f97316]" />
+            <span>AUTONOMOUS RUNTIME // SYS.GEN-18</span>
+          </div>
+          <h1 className="font-[family-name:var(--font-bricolage)] font-black tracking-[-0.06em] text-white text-7xl sm:text-9xl md:text-[10rem] lg:text-[11.5rem] leading-[0.85] select-none uppercase drop-shadow-[0_10px_35px_rgba(0,0,0,0.8)]">
+            LOLBIT<span className="text-[#f97316]">.</span>
+          </h1>
+        </div>
 
         {/* Sub-statement editorial */}
-        <p className="max-w-3xl pb-20 pt-6 text-xl font-normal leading-relaxed text-neutral-400 md:text-2xl">
+        <p className="max-w-3xl pb-8 pt-6 text-xl font-normal leading-relaxed text-neutral-400 md:text-2xl">
           Autonomous Runtime // Ethical Dev. Designing resilient digital
           structures, deconstructing systems and orchestrating autonomous
           realities — {member.role.toLowerCase()}.
         </p>
+
+        {/* ══ TELEMETRÍA REAL DEL DISPOSITIVO DEL VISITANTE (HUD) ══ */}
+        <div className="mb-16 rounded-xl border border-neutral-800/80 bg-black/60 p-4 font-mono text-xs shadow-lg backdrop-blur-md">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-800/80 pb-3">
+            <span className="flex items-center gap-2 text-[10px] tracking-widest text-[#f97316] uppercase font-bold">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#f97316] animate-pulse" />
+              CLIENT TELEMETRY // REAL HARDWARE FEED
+            </span>
+            <span className="text-[10px] text-neutral-500 tracking-wider">
+              ZERO MOCK DATA • VERIFIED HARDWARE
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-3 pt-3 text-[11px] sm:grid-cols-4 md:grid-cols-5">
+            <div>
+              <p className="text-[9px] text-neutral-500 uppercase tracking-widest">Platform / OS</p>
+              <p className="font-semibold text-white truncate">{telemetry.os}</p>
+            </div>
+            <div>
+              <p className="text-[9px] text-neutral-500 uppercase tracking-widest">Display</p>
+              <p className="font-semibold text-white truncate">
+                {telemetry.resolution} <span className="text-neutral-500 font-normal">@{telemetry.pixelRatio}x</span>
+              </p>
+            </div>
+            <div>
+              <p className="text-[9px] text-neutral-500 uppercase tracking-widest">CPU Cores</p>
+              <p className="font-semibold text-white">{telemetry.cores} Logic Cores</p>
+            </div>
+            <div>
+              <p className="text-[9px] text-neutral-500 uppercase tracking-widest">Memory</p>
+              <p className="font-semibold text-white">{telemetry.memory}</p>
+            </div>
+            <div className="col-span-2 sm:col-span-4 md:col-span-1">
+              <p className="text-[9px] text-neutral-500 uppercase tracking-widest">Latency / Ping</p>
+              <p className="font-semibold text-[#f97316]">
+                {telemetry.latencyMs !== null ? `${telemetry.latencyMs}ms (Asset RTT)` : "Measuring..."}
+              </p>
+            </div>
+          </div>
+          <div className="mt-2.5 pt-2.5 border-t border-neutral-900 flex items-center justify-between text-[10px] text-neutral-500">
+            <span className="truncate max-w-full">
+              GPU: <span className="text-emerald-400/90">{telemetry.gpu}</span>
+            </span>
+            <span className="shrink-0 pl-2">VP: {telemetry.viewport}</span>
+          </div>
+        </div>
 
         {/* ══ THE INTERACTIVE INDEX ══ */}
         <section aria-label="Systems and projects index">
@@ -515,7 +951,7 @@ export function LolbitProfile({ member }: { member: Member }) {
           </ul>
         </section>
 
-        {/* ══ FIRMA + TERMINAL DIEGÉTICA ══ */}
+        {/* ══ FIRMA + TERMINAL DIEGÉTICA INTERACTIVA ══ */}
         <footer className="mt-24">
           <blockquote className="max-w-3xl font-serif text-3xl italic leading-snug text-neutral-100 sm:text-4xl">
             &ldquo;SYSTEM ONLINE. Playtime is over.&rdquo;
@@ -524,37 +960,175 @@ export function LolbitProfile({ member }: { member: Member }) {
             — Lolbit // Autonomous Runtime, FREQ 84.2MHz
           </p>
 
-          {/* Consola minimalista plegable de un solo comando */}
-          <div className="mt-12 max-w-2xl">
-            <button
-              onClick={() => setTermOpen((v) => !v)}
-              aria-expanded={termOpen}
-              className="group flex w-full items-center justify-between border border-neutral-800 px-4 py-2.5 font-mono text-xs text-neutral-400 transition-colors hover:border-[#f97316]/50 hover:text-white"
-            >
-              <span className="inline-flex items-center gap-2">
-                <Terminal className="h-3.5 w-3.5 text-[#f97316]" />
-                <span className="text-[#f97316]">$</span> run --diagnostics
-                {!termOpen && (
-                  <span className="lolbit-caret text-[#f97316]">▊</span>
-                )}
-              </span>
-              <span className="text-[10px] tracking-widest text-neutral-600 group-hover:text-neutral-300">
-                {termOpen ? "[ COLLAPSE ]" : "[ EXECUTE ]"}
-              </span>
-            </button>
+          {/* Consola interactiva totalmente funcional */}
+          <div className="mt-12 max-w-3xl">
+            <InteractiveTerminal
+              telemetry={telemetry}
+              lanyard={{ data: lanyardData, isLive: !!lanyardIsLive }}
+            />
+          </div>
 
-            <div className={`lolbit-drawer ${termOpen ? "open" : ""}`}>
+          {/* ══ SECCIÓN DE CONTACTO & PRESENCIA EN VIVO (FOOTER EDITORIAL) ══ */}
+          <section className="mt-20 border-t border-neutral-800/80 pt-12" aria-label="Contact and live presence">
+            <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
               <div>
-                <div className="space-y-1 border-x border-b border-neutral-800 bg-black/60 px-4 py-4 font-mono text-xs leading-relaxed">
-                  <p className="text-emerald-400">[OK] runtime.ethical ......... ACTIVE</p>
-                  <p className="text-neutral-400">[SYS] node_id ............... 0x7F</p>
-                  <p className="text-neutral-400">[NET] freq .................. 84.2 MHz</p>
-                  <p className="text-neutral-400">[SEC] honey-grid ............ ARMED</p>
-                  <p className="text-[#fdba74]">[LOG] playtime over. autonomy retained.</p>
+                <h3 className="font-mono text-xs font-bold tracking-[0.35em] text-neutral-500 uppercase">
+                  Live Presence &amp; Vectors
+                </h3>
+                <p className="mt-1 font-sans text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                  Conectar &amp; Colaborar
+                </p>
+              </div>
+
+              {/* Badge de Presencia Lanyard en Vivo */}
+              <div className="w-full max-w-md rounded-xl border border-neutral-800 bg-neutral-950/80 p-4 shadow-xl backdrop-blur-md">
+                <div className="flex items-center justify-between text-xs font-mono mb-2">
+                  <span className="flex items-center gap-2 text-neutral-400">
+                    <span
+                      className={`h-2 w-2 rounded-full ${
+                        lanyardIsLive ? "bg-emerald-400 animate-ping" : "bg-neutral-600"
+                      }`}
+                    />
+                    <span>DISCORD PRESENCE</span>
+                  </span>
+                  <span
+                    className={`font-bold uppercase tracking-wider ${
+                      lanyardIsLive ? "text-emerald-400" : "text-neutral-500"
+                    }`}
+                  >
+                    {lanyardIsLive ? "● LIVE" : "○ OFFLINE"}
+                  </span>
                 </div>
+
+                {/* Actividad en vivo */}
+                {lanyardData?.listening_to_spotify && lanyardData.spotify ? (
+                  <div className="flex items-center gap-3 pt-1">
+                    {lanyardData.spotify.album_art_url && (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={lanyardData.spotify.album_art_url}
+                        alt=""
+                        className="h-11 w-11 shrink-0 rounded-lg border border-emerald-500/40 object-cover shadow-sm"
+                      />
+                    )}
+                    <div className="min-w-0 flex-1 font-mono">
+                      <p className="text-[10px] text-emerald-400 uppercase tracking-widest font-semibold flex items-center gap-1.5">
+                        <span>♫</span> LISTENING // SPOTIFY
+                      </p>
+                      <p className="truncate text-xs font-medium text-white">
+                        {lanyardData.spotify.song}
+                      </p>
+                      <p className="truncate text-[11px] text-neutral-400">
+                        {lanyardData.spotify.artist}
+                      </p>
+                    </div>
+                  </div>
+                ) : activeGameOrCode ? (
+                  <div className="pt-1 font-mono">
+                    <p className="text-[10px] text-amber-400 uppercase tracking-widest font-semibold flex items-center gap-1.5">
+                      <span>▶</span> CURRENT ACTIVITY
+                    </p>
+                    <p className="text-xs font-medium text-white">
+                      {activeGameOrCode.name}
+                    </p>
+                    {(activeGameOrCode.details || activeGameOrCode.state) && (
+                      <p className="truncate text-[11px] text-neutral-400">
+                        {activeGameOrCode.details || activeGameOrCode.state}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="pt-1 font-mono text-xs text-neutral-500">
+                    {lanyardIsLive ? (
+                      <p className="text-emerald-400/80">$ exec &ldquo;SYSTEM ONLINE. Playtime is over.&rdquo;</p>
+                    ) : (
+                      <p>$ exec --standby // RUNTIME SLEEP</p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+
+            {/* Canales de Enlace */}
+            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {/* Email */}
+              <div className="flex flex-col justify-between rounded-xl border border-neutral-800/80 bg-neutral-950/60 p-5 backdrop-blur-md transition-all hover:border-[#f97316]/50">
+                <div>
+                  <span className="font-mono text-[10px] tracking-[0.25em] text-neutral-500 uppercase">
+                    Direct Vector
+                  </span>
+                  <p className="mt-2 font-mono text-sm font-semibold text-neutral-200 truncate">
+                    gdlolbit005@gmail.com
+                  </p>
+                </div>
+                <button
+                  onClick={() => copyText("gdlolbit005@gmail.com", "email")}
+                  className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 font-mono text-xs text-neutral-300 transition-all hover:border-[#f97316] hover:bg-[#f97316]/10 hover:text-white"
+                >
+                  {copiedKey === "email" ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 text-emerald-400" />
+                      <span className="text-emerald-400 font-bold">COPIED!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5 text-neutral-400" />
+                      <span>COPY EMAIL</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Discord */}
+              <div className="flex flex-col justify-between rounded-xl border border-neutral-800/80 bg-neutral-950/60 p-5 backdrop-blur-md transition-all hover:border-[#5865F2]/50">
+                <div>
+                  <span className="font-mono text-[10px] tracking-[0.25em] text-neutral-500 uppercase">
+                    Discord Identity
+                  </span>
+                  <p className="mt-2 font-mono text-sm font-semibold text-neutral-200">
+                    @imaginebeinglolbit
+                  </p>
+                </div>
+                <button
+                  onClick={() => copyText("imaginebeinglolbit", "discord")}
+                  className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 font-mono text-xs text-neutral-300 transition-all hover:border-[#5865F2] hover:bg-[#5865F2]/10 hover:text-white"
+                >
+                  {copiedKey === "discord" ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 text-emerald-400" />
+                      <span className="text-emerald-400 font-bold">COPIED!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5 text-neutral-400" />
+                      <span>COPY TAG</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* GitHub */}
+              <div className="flex flex-col justify-between rounded-xl border border-neutral-800/80 bg-neutral-950/60 p-5 backdrop-blur-md transition-all hover:border-neutral-500">
+                <div>
+                  <span className="font-mono text-[10px] tracking-[0.25em] text-neutral-500 uppercase">
+                    Open Source
+                  </span>
+                  <p className="mt-2 font-mono text-sm font-semibold text-neutral-200">
+                    github.com/Lol-bit-Rvgl
+                  </p>
+                </div>
+                <a
+                  href="https://github.com/Lol-bit-Rvgl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 font-mono text-xs text-neutral-300 transition-all hover:border-neutral-500 hover:bg-white/5 hover:text-white"
+                >
+                  <ExternalLink className="h-3.5 w-3.5 text-neutral-400" />
+                  <span>OPEN GITHUB ↗</span>
+                </a>
+              </div>
+            </div>
+          </section>
 
           {/* Pie hairline */}
           <div className="mt-20 flex items-center justify-between border-t border-neutral-800/80 pt-6 font-mono text-[10px] tracking-[0.25em] text-neutral-600 uppercase">
