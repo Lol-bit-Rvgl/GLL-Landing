@@ -7,15 +7,14 @@ import type { Member } from "@/data/members";
 import {
   ArrowLeft,
   ChevronDown,
-  Terminal as TerminalIcon,
   Volume2,
   VolumeX,
   Copy,
   Check,
   ExternalLink,
-  Cpu,
-  Monitor,
-  Wifi,
+  Sparkles,
+  Send,
+  X,
 } from "lucide-react";
 
 const FX_STYLES = `
@@ -667,315 +666,208 @@ function useDeviceTelemetry() {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   INTERACTIVE TERMINAL (TTY)
+   POLY AI / CHARACTER.AI CONVERSATIONAL MODAL
    ══════════════════════════════════════════════════════════════ */
-function InteractiveTerminal({
-  telemetry,
-  lanyard,
-}: {
-  telemetry: DeviceTelemetry;
-  lanyard: { data: LanyardData | null; isLive: boolean };
-}) {
-  const [history, setHistory] = useState<
-    { id: string; cmd: string; output: React.ReactNode }[]
-  >(() => [
+interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+interface LolbitChatModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+function LolbitChatModal({ isOpen, onClose }: LolbitChatModalProps) {
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      id: "init",
-      cmd: "run --diagnostics",
-      output: (
-        <div className="space-y-1">
-          <p className="text-emerald-400">[OK] runtime.ethical ......... ACTIVE</p>
-          <p className="text-neutral-400">[SYS] node_id ............... 0x7F</p>
-          <p className="text-neutral-400">[NET] freq .................. 84.2 MHz</p>
-          <p className="text-neutral-400">[SEC] zero-trust ............ ARMED</p>
-          <p className="text-[#fdba74]">[LOG] &ldquo;Playtime over. Autonomy retained.&rdquo;</p>
-          <p className="pt-2 text-neutral-500">
-            Type <span className="text-[#f97316] font-semibold">help</span> to view available directives.
-          </p>
-        </div>
-      ),
+      role: "assistant",
+      content:
+        "Hola. Soy Lolbit. Alter-ego digital, ente del ciberespacio y testigo de los desastres y genialidades de Paulo. ¿Qué traes entre manos hoy?",
     },
   ]);
   const [inputVal, setInputVal] = useState("");
-  const [cmdHistory, setCmdHistory] = useState<string[]>([]);
-  const [historyIdx, setHistoryIdx] = useState<number>(-1);
+  const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => inputRef.current?.focus(), 80);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [history]);
+  }, [messages, isLoading]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const raw = inputVal.trim();
-    if (!raw) return;
-    const cmd = raw.toLowerCase();
+  const handleSend = async (textToSend?: string) => {
+    const raw = (textToSend ?? inputVal).trim();
+    if (!raw || isLoading) return;
 
-    setCmdHistory((prev) => [...prev, raw]);
-    setHistoryIdx(-1);
+    const newHistory: ChatMessage[] = [...messages, { role: "user", content: raw }];
+    setMessages(newHistory);
     setInputVal("");
+    setIsLoading(true);
 
-    if (cmd === "clear") {
-      setHistory([]);
-      return;
-    }
-
-    let output: React.ReactNode;
-    if (cmd === "help") {
-      output = (
-        <div className="space-y-1 text-xs text-neutral-300">
-          <p className="text-neutral-500 font-semibold tracking-wider uppercase">Available directives:</p>
-          <p><span className="text-[#f97316] font-bold">help</span> - Display list of available directives</p>
-          <p><span className="text-[#f97316] font-bold">projects</span> - List deployed architectures and live system status</p>
-          <p><span className="text-[#f97316] font-bold">status</span> - Display node integrity and live Discord presence</p>
-          <p><span className="text-[#f97316] font-bold">device</span> - Run real-time client hardware &amp; WebGL telemetry</p>
-          <p><span className="text-[#f97316] font-bold">contact</span> - Output direct transmission links &amp; email</p>
-          <p><span className="text-[#f97316] font-bold">clear</span> - Purge screen buffer</p>
-        </div>
-      );
-    } else if (cmd === "projects") {
-      output = (
-        <div className="space-y-2 text-xs text-neutral-300">
-          <p className="text-[#f97316] font-semibold tracking-wider uppercase">[ DEPLOYED ARCHITECTURES &amp; REPOSITORIES ]</p>
-          <div className="space-y-2.5 pl-1 font-mono text-[11px]">
-            <div>
-              <p>
-                <span className="font-bold text-white">01. KYUBI SOCIAL BACKEND</span>{" "}
-                <span className="text-emerald-400 text-[10px]">[DEPLOYED]</span> — API &amp; Infrastructure
-              </p>
-              <p className="text-neutral-500 text-[10px] pl-3">
-                Stack: Node.js, Express, PostgreSQL, JWT Auth, WebSockets, REST APIs
-              </p>
-              <p className="pl-3">
-                <a
-                  href="https://github.com/Lol-bit-Rvgl/Kyubi-Social-Backend"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#f97316] hover:underline"
-                >
-                  github.com/Lol-bit-Rvgl/Kyubi-Social-Backend ↗
-                </a>
-              </p>
-            </div>
-
-            <div>
-              <p>
-                <span className="font-bold text-white">02. KYUBI SOCIAL FRONTEND</span>{" "}
-                <span className="text-[#f97316] text-[10px]">[ACTIVE]</span> — Mobile Client
-              </p>
-              <p className="text-neutral-500 text-[10px] pl-3">
-                Stack: Flutter, Dart, Riverpod, CustomScrollView Slivers, REST Integration
-              </p>
-              <p className="pl-3">
-                <a
-                  href="https://github.com/Lol-bit-Rvgl/Kyubi-Social-Frontend"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#f97316] hover:underline"
-                >
-                  github.com/Lol-bit-Rvgl/Kyubi-Social-Frontend ↗
-                </a>
-              </p>
-            </div>
-
-            <div>
-              <p>
-                <span className="font-bold text-white">03. KYUBI SOCIAL LANDING</span>{" "}
-                <span className="text-emerald-400 text-[10px]">[ONLINE]</span> — Web Platform
-              </p>
-              <p className="text-neutral-500 text-[10px] pl-3">
-                Stack: Next.js, TypeScript, Tailwind CSS, Framer Motion, SSG
-              </p>
-              <p className="pl-3">
-                <a
-                  href="https://github.com/Lol-bit-Rvgl/Kyubi-Social-landing"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#f97316] hover:underline"
-                >
-                  github.com/Lol-bit-Rvgl/Kyubi-Social-landing ↗
-                </a>
-              </p>
-            </div>
-
-            <div>
-              <p>
-                <span className="font-bold text-white">04. PANDLY LANDING</span>{" "}
-                <span className="text-cyan-400 text-[10px]">[STABLE]</span> — Showcase &amp; Product
-              </p>
-              <p className="text-neutral-500 text-[10px] pl-3">
-                Stack: Next.js, React, Tailwind CSS, Responsive Design, Interactive UX
-              </p>
-              <p className="pl-3">
-                <a
-                  href="https://github.com/Lol-bit-Rvgl/Pandly_Landing"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#f97316] hover:underline"
-                >
-                  github.com/Lol-bit-Rvgl/Pandly_Landing ↗
-                </a>
-              </p>
-            </div>
-
-            <div>
-              <p>
-                <span className="font-bold text-white">05. HONEY CYBERSECURITY</span>{" "}
-                <span className="text-purple-400 text-[10px]">[LAB // DEFENSE]</span> — Security &amp; Telemetry
-              </p>
-              <p className="text-neutral-500 text-[10px] pl-3">
-                Stack: Network Security, Reverse Tunneling, Honeypot Traps, Telemetry, Forensic Logging
-              </p>
-              <p className="pl-3">
-                <a
-                  href="https://github.com/SpringtraphackkZ/Honey-Cybersecurity"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#f97316] hover:underline"
-                >
-                  github.com/SpringtraphackkZ/Honey-Cybersecurity ↗
-                </a>
-              </p>
-            </div>
-          </div>
-        </div>
-      );
-    } else if (cmd === "status") {
-      const activeActivity = lanyard.data?.activities?.find(
-        (a) => a.type !== 2 && a.name !== "Spotify" && a.name !== "Custom Status" && a.type !== 4
-      );
-      output = (
-        <div className="space-y-1 text-xs text-neutral-300">
-          <p className="text-emerald-400">[NODE] 0x7F // LOLBIT RUNTIME ......... ONLINE</p>
-          <p className="text-neutral-400">[FREQ] 84.2 MHz // ZERO-TRUST TUNNEL ... ARMED</p>
-          <p className="text-neutral-400">
-            [DISCORD] Status:{" "}
-            <strong className={lanyard.isLive ? "text-emerald-400" : "text-neutral-500"}>
-              {lanyard.isLive ? (lanyard.data?.discord_status?.toUpperCase() ?? "ONLINE") : "OFFLINE"}
-            </strong>
-          </p>
-          {lanyard.data?.listening_to_spotify && lanyard.data.spotify ? (
-            <p className="text-emerald-300">
-              [SPOTIFY] ♫ {lanyard.data.spotify.song} — {lanyard.data.spotify.artist}
-            </p>
-          ) : null}
-          {activeActivity ? (
-            <p className="text-amber-300">
-              [ACTIVITY] ▶ {activeActivity.name}: {activeActivity.details || activeActivity.state || "Active"}
-            </p>
-          ) : null}
-          <p className="text-[#fdba74]">[SYS.LOG] &ldquo;Playtime is over. Autonomy retained.&rdquo;</p>
-        </div>
-      );
-    } else if (cmd === "device") {
-      output = (
-        <div className="space-y-1 text-xs text-neutral-300">
-          <p className="text-[#f97316] font-semibold tracking-wider">[ VISITOR HARDWARE &amp; WEBGL REPORT ]</p>
-          <p><span className="text-neutral-500">OS / Platform ......</span> <span className="text-neutral-200">{telemetry.os}</span></p>
-          <p><span className="text-neutral-500">Screen Resolution ..</span> <span className="text-neutral-200">{telemetry.resolution}</span></p>
-          <p><span className="text-neutral-500">Viewport Dimensions </span> <span className="text-neutral-200">{telemetry.viewport}</span></p>
-          <p><span className="text-neutral-500">Device Pixel Ratio .</span> <span className="text-neutral-200">{telemetry.pixelRatio}x</span></p>
-          <p><span className="text-neutral-500">Logical CPU Cores ..</span> <span className="text-neutral-200">{telemetry.cores} cores</span></p>
-          <p><span className="text-neutral-500">Device Memory ......</span> <span className="text-neutral-200">{telemetry.memory}</span></p>
-          <p><span className="text-neutral-500">WebGL GPU ..........</span> <span className="text-emerald-400">{telemetry.gpu}</span></p>
-          <p><span className="text-neutral-500">Network Latency ....</span> <span className="text-[#f97316]">{telemetry.latencyMs !== null ? `${telemetry.latencyMs}ms` : "calculating..."}</span></p>
-        </div>
-      );
-    } else if (cmd === "contact") {
-      output = (
-        <div className="space-y-1 text-xs text-neutral-300">
-          <p className="text-neutral-500 font-semibold tracking-wider uppercase">[ DIRECT TRANSMISSION VECTORS ]</p>
-          <p><span className="text-neutral-500">Email .....</span> <span className="text-neutral-200">gdlolbit005@gmail.com</span></p>
-          <p><span className="text-neutral-500">Discord ...</span> <span className="text-neutral-200">@imaginebeinglolbit</span></p>
-          <p><span className="text-neutral-500">GitHub ....</span> <a href="https://github.com/Lol-bit-Rvgl" target="_blank" rel="noopener noreferrer" className="text-[#f97316] hover:underline">https://github.com/Lol-bit-Rvgl</a></p>
-        </div>
-      );
-    } else {
-      output = (
-        <p className="text-xs text-red-400">
-          command not found: &quot;{raw}&quot;. Type &quot;help&quot; for a list of available directives.
-        </p>
-      );
-    }
-
-    setHistory((prev) => [
-      ...prev,
-      { id: String(Date.now() + Math.random()), cmd: raw, output },
-    ]);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "ArrowUp") {
-      e.preventDefault();
-      if (cmdHistory.length === 0) return;
-      const nextIdx = historyIdx === -1 ? cmdHistory.length - 1 : Math.max(0, historyIdx - 1);
-      setHistoryIdx(nextIdx);
-      setInputVal(cmdHistory[nextIdx] ?? "");
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      if (historyIdx === -1) return;
-      const nextIdx = historyIdx + 1;
-      if (nextIdx >= cmdHistory.length) {
-        setHistoryIdx(-1);
-        setInputVal("");
-      } else {
-        setHistoryIdx(nextIdx);
-        setInputVal(cmdHistory[nextIdx] ?? "");
-      }
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: newHistory }),
+      });
+      const data = await res.json();
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            data.reply ||
+            "Se recibió un paquete vacío desde el núcleo neural.",
+        },
+      ]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            "Interferencia en la conexión con el subsistema de chat de Groq.",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div
-      onClick={() => inputRef.current?.focus()}
-      className="cursor-text rounded-xl border border-neutral-800 bg-black/90 p-4 font-mono text-xs shadow-2xl backdrop-blur-md transition-all hover:border-neutral-700"
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
     >
-      {/* Barra superior de terminal */}
-      <div className="flex items-center justify-between border-b border-neutral-800/80 pb-3 text-[11px] text-neutral-500">
-        <div className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-red-500/80" />
-          <span className="h-2.5 w-2.5 rounded-full bg-yellow-500/80" />
-          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/80" />
-          <span className="ml-2 text-neutral-400">lolbit@gll-node: ~</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-[10px] text-neutral-600">
-          <TerminalIcon className="h-3 w-3 text-[#f97316]" />
-          <span>INTERACTIVE TTY</span>
-        </div>
-      </div>
-
-      {/* Historial de comandos */}
-      <div ref={scrollRef} className="max-h-72 overflow-y-auto pt-3 space-y-3">
-        {history.map((h) => (
-          <div key={h.id} className="space-y-1 leading-relaxed">
-            <div className="flex items-center gap-2 text-neutral-400">
-              <span className="text-[#f97316] font-bold">lolbit@gll-node:~$</span>
-              <span className="text-white font-medium">{h.cmd}</span>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative flex flex-col w-full max-w-xl rounded-2xl border border-neutral-800 bg-neutral-950/95 shadow-2xl backdrop-blur-xl overflow-hidden h-[580px] max-h-[90vh]"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-neutral-800/80 px-5 py-3.5 bg-neutral-900/60">
+          <div className="flex items-center gap-3">
+            <div className="relative flex h-9 w-9 items-center justify-center rounded-full border border-[#f97316]/50 bg-[#f97316]/15 text-[#f97316]">
+              <Sparkles className="h-4 w-4 animate-pulse" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-neutral-950" />
             </div>
-            <div className="pl-4">{h.output}</div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-sans text-sm font-bold text-white tracking-tight">
+                  Lolbit Autonomous Core
+                </h3>
+                <span className="rounded border border-neutral-700/60 bg-neutral-800/60 px-1.5 py-0.5 font-mono text-[9px] font-semibold text-[#f97316]">
+                  POLY AI
+                </span>
+              </div>
+              <p className="font-mono text-[10px] text-neutral-400">
+                Groq Llama-3.3 • Carisma y dialéctica sin filtros
+              </p>
+            </div>
           </div>
-        ))}
+          <button
+            onClick={onClose}
+            className="flex items-center gap-1.5 rounded-lg border border-neutral-800 bg-neutral-900/60 px-2.5 py-1 font-mono text-xs text-neutral-400 transition-colors hover:border-neutral-600 hover:text-white"
+          >
+            <span>ESC</span>
+            <X className="h-3 w-3" />
+          </button>
+        </div>
 
-        {/* Input prompt interactivo */}
-        <form onSubmit={handleSubmit} className="flex items-center gap-2 pt-1">
-          <label htmlFor="terminal-prompt" className="text-[#f97316] font-bold whitespace-nowrap">
-            lolbit@gll-node:~$
-          </label>
+        {/* Historial de Mensajes */}
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 font-sans text-sm scroll-smooth"
+        >
+          {messages.map((msg, idx) => (
+            <div
+              key={idx}
+              className={`flex flex-col ${
+                msg.role === "user" ? "items-end" : "items-start"
+              }`}
+            >
+              <span className="mb-1 font-mono text-[10px] tracking-wider uppercase text-neutral-500">
+                {msg.role === "user" ? "Tú // Operativo" : "Lolbit // Core"}
+              </span>
+              <div
+                className={`max-w-[85%] rounded-2xl px-4 py-2.5 leading-relaxed ${
+                  msg.role === "user"
+                    ? "rounded-tr-sm bg-[#f97316]/15 border border-[#f97316]/30 text-white shadow-sm"
+                    : "rounded-tl-sm bg-neutral-900/90 border border-neutral-800/90 text-neutral-200"
+                }`}
+              >
+                <p className="whitespace-pre-wrap">{msg.content}</p>
+              </div>
+            </div>
+          ))}
+
+          {/* Indicador de Carga */}
+          {isLoading && (
+            <div className="flex flex-col items-start">
+              <span className="mb-1 font-mono text-[10px] tracking-wider uppercase text-neutral-500">
+                Lolbit // Core
+              </span>
+              <div className="rounded-2xl rounded-tl-sm bg-neutral-900/90 border border-neutral-800/90 px-4 py-2.5 text-xs font-mono text-[#f97316] flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-[#f97316] animate-ping" />
+                <span>Lolbit está procesando...</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Chips de Sugerencias Iniciales */}
+        {messages.length <= 2 && !isLoading && (
+          <div className="px-4 pb-2 flex flex-wrap gap-1.5">
+            {[
+              "¿Qué onda con Kyubi Social?",
+              "¿Quién eres?",
+              "¿Cómo te contacto?",
+            ].map((chip) => (
+              <button
+                key={chip}
+                onClick={() => handleSend(chip)}
+                className="rounded-full border border-neutral-800 bg-neutral-900/80 px-3 py-1 font-mono text-[11px] text-neutral-400 transition-colors hover:border-[#f97316] hover:bg-[#f97316]/10 hover:text-white"
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Input Bar */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSend();
+          }}
+          className="border-t border-neutral-800/80 p-3 bg-neutral-900/30 flex items-center gap-2"
+        >
           <input
-            id="terminal-prompt"
             ref={inputRef}
             type="text"
             value={inputVal}
             onChange={(e) => setInputVal(e.target.value)}
-            onKeyDown={handleKeyDown}
-            autoComplete="off"
-            spellCheck="false"
-            className="flex-1 bg-transparent text-white outline-none border-none p-0 focus:ring-0 font-mono text-xs"
-            placeholder="type a command (help, status, device, contact, clear)..."
+            placeholder="Escribe un mensaje a Lolbit..."
+            disabled={isLoading}
+            className="flex-1 rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-2.5 font-sans text-sm text-neutral-100 placeholder-neutral-500 outline-none transition-colors focus:border-[#f97316]/60 focus:ring-1 focus:ring-[#f97316]/60 disabled:opacity-50"
           />
+          <button
+            type="submit"
+            disabled={!inputVal.trim() || isLoading}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f97316] text-black transition-transform hover:scale-105 hover:bg-[#ea580c] disabled:opacity-40 disabled:hover:scale-100"
+          >
+            <Send className="h-4 w-4" />
+          </button>
         </form>
       </div>
     </div>
@@ -992,6 +884,7 @@ export function LolbitProfile({ member }: { member: Member }) {
   const [hovered, setHovered] = useState<IndexEntry | null>(null);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const telemetry = useDeviceTelemetry();
   const { data: lanyardData } = useLanyard("1066501844177797171");
@@ -1015,6 +908,21 @@ export function LolbitProfile({ member }: { member: Member }) {
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
+
+  // Listener global de teclado (Ctrl+K / Cmd+K y Escape) — solo tras montar
+  useEffect(() => {
+    if (!mounted) return;
+    const handleGlobalKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsChatOpen((prev) => !prev);
+      } else if (e.key === "Escape") {
+        setIsChatOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleGlobalKey);
+    return () => window.removeEventListener("keydown", handleGlobalKey);
+  }, [mounted]);
 
   const copyText = useCallback((text: string, key: string) => {
     if (typeof navigator !== "undefined" && navigator.clipboard) {
@@ -1166,192 +1074,115 @@ export function LolbitProfile({ member }: { member: Member }) {
           </ul>
         </section>
 
-        {/* ══ FIRMA + TERMINAL DIEGÉTICA INTERACTIVA ══ */}
-        <footer className="mt-24">
-          <blockquote className="max-w-3xl font-serif text-3xl italic leading-snug text-neutral-100 sm:text-4xl">
-            &ldquo;SYSTEM ONLINE. Playtime is over.&rdquo;
-          </blockquote>
-          <p className="mt-4 font-mono text-[11px] tracking-[0.3em] text-neutral-600 uppercase">
-            — Lolbit // Autonomous Runtime, FREQ 84.2MHz
+        {/* ══ FOOTER EDITORIAL ESTILO RAINBOW WU ══ */}
+        <footer className="mt-28 border-t border-neutral-800/80 pt-16">
+          {/* Header sutil */}
+          <p className="text-xs tracking-[0.2em] text-neutral-500 font-mono mb-4 uppercase">
+            HABLEMOS.
           </p>
 
-          {/* Consola interactiva totalmente funcional */}
-          <div className="mt-12 max-w-3xl">
-            <InteractiveTerminal
-              telemetry={telemetry}
-              lanyard={{ data: lanyardData, isLive: !!lanyardIsLive }}
-            />
+          {/* Display Email Masivo con botón de copiado */}
+          <div className="flex flex-wrap items-baseline gap-4 sm:gap-6">
+            <a
+              href="mailto:gdlolbit005@gmail.com"
+              className="text-4xl sm:text-6xl md:text-7xl font-sans font-medium text-white tracking-tighter hover:text-amber-500 transition-colors inline-block"
+            >
+              gdlolbit005@gmail.com
+            </a>
+
+            <button
+              onClick={() => copyText("gdlolbit005@gmail.com", "email")}
+              className="inline-flex items-center gap-1.5 rounded-full border border-neutral-800 bg-neutral-900/80 px-3.5 py-1.5 font-mono text-xs text-neutral-400 transition-all hover:border-amber-500 hover:text-white"
+              title="Copiar email"
+            >
+              {copiedKey === "email" ? (
+                <>
+                  <Check className="h-3.5 w-3.5 text-emerald-400" />
+                  <span className="text-emerald-400 font-bold text-[10px]">COPIED!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5" />
+                  <span className="text-[10px] tracking-wider uppercase">COPIAR</span>
+                </>
+              )}
+            </button>
           </div>
 
-          {/* ══ SECCIÓN DE CONTACTO & PRESENCIA EN VIVO (FOOTER EDITORIAL) ══ */}
-          <section className="mt-20 border-t border-neutral-800/80 pt-12" aria-label="Contact and live presence">
-            <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-              <div>
-                <h3 className="font-mono text-xs font-bold tracking-[0.35em] text-neutral-500 uppercase">
-                  Live Presence &amp; Vectors
-                </h3>
-                <p className="mt-1 font-sans text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                  Conectar &amp; Colaborar
-                </p>
-              </div>
-
-              {/* Badge de Presencia Lanyard en Vivo */}
-              <div className="w-full max-w-md rounded-xl border border-neutral-800 bg-neutral-950/80 p-4 shadow-xl backdrop-blur-md">
-                <div className="flex items-center justify-between text-xs font-mono mb-2">
-                  <span className="flex items-center gap-2 text-neutral-400">
-                    <span
-                      className={`h-2 w-2 rounded-full ${
-                        lanyardIsLive ? "bg-emerald-400 animate-ping" : "bg-neutral-600"
-                      }`}
-                    />
-                    <span>DISCORD PRESENCE</span>
-                  </span>
-                  <span
-                    className={`font-bold uppercase tracking-wider ${
-                      lanyardIsLive ? "text-emerald-400" : "text-neutral-500"
-                    }`}
-                  >
-                    {lanyardIsLive ? "● LIVE" : "○ OFFLINE"}
-                  </span>
-                </div>
-
-                {/* Actividad en vivo */}
-                {lanyardData?.listening_to_spotify && lanyardData.spotify ? (
-                  <div className="flex items-center gap-3 pt-1">
-                    {lanyardData.spotify.album_art_url && (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={lanyardData.spotify.album_art_url}
-                        alt=""
-                        className="h-11 w-11 shrink-0 rounded-lg border border-emerald-500/40 object-cover shadow-sm"
-                      />
-                    )}
-                    <div className="min-w-0 flex-1 font-mono">
-                      <p className="text-[10px] text-emerald-400 uppercase tracking-widest font-semibold flex items-center gap-1.5">
-                        <span>♫</span> LISTENING // SPOTIFY
-                      </p>
-                      <p className="truncate text-xs font-medium text-white">
-                        {lanyardData.spotify.song}
-                      </p>
-                      <p className="truncate text-[11px] text-neutral-400">
-                        {lanyardData.spotify.artist}
-                      </p>
-                    </div>
-                  </div>
-                ) : activeGameOrCode ? (
-                  <div className="pt-1 font-mono">
-                    <p className="text-[10px] text-amber-400 uppercase tracking-widest font-semibold flex items-center gap-1.5">
-                      <span>▶</span> CURRENT ACTIVITY
-                    </p>
-                    <p className="text-xs font-medium text-white">
-                      {activeGameOrCode.name}
-                    </p>
-                    {(activeGameOrCode.details || activeGameOrCode.state) && (
-                      <p className="truncate text-[11px] text-neutral-400">
-                        {activeGameOrCode.details || activeGameOrCode.state}
-                      </p>
-                    )}
-                  </div>
+          {/* Sub-barra inferior */}
+          <div className="border-t border-neutral-800/60 mt-16 pt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between text-xs font-mono text-neutral-500">
+            {/* Izquierda: Discord + GitHub + Lanyard status */}
+            <div className="flex flex-wrap items-center gap-5 sm:gap-6">
+              {/* Discord con copiado */}
+              <button
+                onClick={() => copyText("imaginebeinglolbit", "discord")}
+                className="group flex items-center gap-1.5 text-neutral-400 transition-colors hover:text-white"
+                title="Copiar Discord tag"
+              >
+                <span>DISCORD:</span>
+                <span className="text-neutral-200">@imaginebeinglolbit</span>
+                {copiedKey === "discord" ? (
+                  <span className="text-emerald-400 font-bold text-[10px]">[COPIED!]</span>
                 ) : (
-                  <div className="pt-1 font-mono text-xs text-neutral-500">
-                    {lanyardIsLive ? (
-                      <p className="text-emerald-400/80">$ exec &ldquo;SYSTEM ONLINE. Playtime is over.&rdquo;</p>
-                    ) : (
-                      <p>$ exec --standby // RUNTIME SLEEP</p>
-                    )}
-                  </div>
+                  <Copy className="h-3 w-3 text-neutral-500 group-hover:text-amber-500 transition-colors" />
                 )}
-              </div>
-            </div>
-
-            {/* Canales de Enlace */}
-            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {/* Email */}
-              <div className="flex flex-col justify-between rounded-xl border border-neutral-800/80 bg-neutral-950/60 p-5 backdrop-blur-md transition-all hover:border-[#f97316]/50">
-                <div>
-                  <span className="font-mono text-[10px] tracking-[0.25em] text-neutral-500 uppercase">
-                    Direct Vector
-                  </span>
-                  <p className="mt-2 font-mono text-sm font-semibold text-neutral-200 truncate">
-                    gdlolbit005@gmail.com
-                  </p>
-                </div>
-                <button
-                  onClick={() => copyText("gdlolbit005@gmail.com", "email")}
-                  className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 font-mono text-xs text-neutral-300 transition-all hover:border-[#f97316] hover:bg-[#f97316]/10 hover:text-white"
-                >
-                  {copiedKey === "email" ? (
-                    <>
-                      <Check className="h-3.5 w-3.5 text-emerald-400" />
-                      <span className="text-emerald-400 font-bold">COPIED!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-3.5 w-3.5 text-neutral-400" />
-                      <span>COPY EMAIL</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Discord */}
-              <div className="flex flex-col justify-between rounded-xl border border-neutral-800/80 bg-neutral-950/60 p-5 backdrop-blur-md transition-all hover:border-[#5865F2]/50">
-                <div>
-                  <span className="font-mono text-[10px] tracking-[0.25em] text-neutral-500 uppercase">
-                    Discord Identity
-                  </span>
-                  <p className="mt-2 font-mono text-sm font-semibold text-neutral-200">
-                    @imaginebeinglolbit
-                  </p>
-                </div>
-                <button
-                  onClick={() => copyText("imaginebeinglolbit", "discord")}
-                  className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 font-mono text-xs text-neutral-300 transition-all hover:border-[#5865F2] hover:bg-[#5865F2]/10 hover:text-white"
-                >
-                  {copiedKey === "discord" ? (
-                    <>
-                      <Check className="h-3.5 w-3.5 text-emerald-400" />
-                      <span className="text-emerald-400 font-bold">COPIED!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-3.5 w-3.5 text-neutral-400" />
-                      <span>COPY TAG</span>
-                    </>
-                  )}
-                </button>
-              </div>
+              </button>
 
               {/* GitHub */}
-              <div className="flex flex-col justify-between rounded-xl border border-neutral-800/80 bg-neutral-950/60 p-5 backdrop-blur-md transition-all hover:border-neutral-500">
-                <div>
-                  <span className="font-mono text-[10px] tracking-[0.25em] text-neutral-500 uppercase">
-                    Open Source
-                  </span>
-                  <p className="mt-2 font-mono text-sm font-semibold text-neutral-200">
-                    github.com/Lol-bit-Rvgl
-                  </p>
-                </div>
-                <a
-                  href="https://github.com/Lol-bit-Rvgl"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 font-mono text-xs text-neutral-300 transition-all hover:border-neutral-500 hover:bg-white/5 hover:text-white"
-                >
-                  <ExternalLink className="h-3.5 w-3.5 text-neutral-400" />
-                  <span>OPEN GITHUB ↗</span>
-                </a>
-              </div>
-            </div>
-          </section>
+              <a
+                href="https://github.com/Lol-bit-Rvgl"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-neutral-400 transition-colors hover:text-white"
+              >
+                <span>GITHUB</span>
+                <ExternalLink className="h-3 w-3 text-neutral-500" />
+              </a>
 
-          {/* Pie hairline */}
-          <div className="mt-20 flex items-center justify-between border-t border-neutral-800/80 pt-6 font-mono text-[10px] tracking-[0.25em] text-neutral-600 uppercase">
-            <span>GLL — God&apos;s Live Longer™</span>
-            <span>END OF FILE // 0x7F</span>
+              {/* Lanyard status indicator */}
+              <span className="flex items-center gap-2">
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    lanyardIsLive ? "bg-emerald-400 animate-pulse" : "bg-neutral-600"
+                  }`}
+                />
+                <span
+                  className={`font-semibold tracking-wider ${
+                    lanyardIsLive ? "text-emerald-400" : "text-neutral-500"
+                  }`}
+                >
+                  {lanyardIsLive ? "● LIVE" : "○ OFFLINE"}
+                </span>
+                {lanyardData?.listening_to_spotify && lanyardData.spotify && (
+                  <span className="hidden md:inline text-neutral-400 truncate max-w-xs">
+                    (♫ {lanyardData.spotify.song})
+                  </span>
+                )}
+              </span>
+            </div>
+
+            {/* Derecha: Copyright / Brand */}
+            <div className="shrink-0 text-neutral-600 tracking-widest uppercase">
+              © 2026 LOLBIT // GOD&apos;S LIVE LONGER™
+            </div>
           </div>
         </footer>
       </article>
+
+      {/* ══ PÍLDORA FLOTANTE 'HABLA CON LOLBIT' (FIXED BOTTOM RIGHT) ══ */}
+      <button
+        onClick={() => setIsChatOpen(true)}
+        className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2.5 rounded-full border border-[#f97316]/50 bg-neutral-950/90 px-4 py-2.5 font-mono text-xs font-medium text-neutral-200 shadow-[0_0_25px_rgba(249,115,22,0.25)] backdrop-blur-md transition-all hover:scale-105 hover:border-[#f97316] hover:bg-neutral-900 hover:text-white"
+      >
+        <Sparkles className="h-3.5 w-3.5 text-[#f97316] animate-pulse" />
+        <span>Habla con Lolbit // AI</span>
+        <kbd className="ml-1 rounded border border-neutral-700 bg-neutral-800/80 px-1.5 py-0.5 text-[10px] font-sans font-semibold text-neutral-300">
+          ⌘K
+        </kbd>
+      </button>
+
+      {/* ══ MODAL CONVERSACIONAL POLY AI ══ */}
+      <LolbitChatModal isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </main>
   );
 }
