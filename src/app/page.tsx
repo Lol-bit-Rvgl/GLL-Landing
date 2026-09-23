@@ -19,7 +19,6 @@ import {
   Gamepad2,
   Users,
   Music,
-  Copy,
   Check,
 } from "lucide-react";
 import { SiDiscord } from "react-icons/si";
@@ -202,11 +201,14 @@ const HOVER_SOUNDS: Record<string, string> = {
 const DISCORD_TAGS: Record<string, string> = {
   nothing: "nothingwork",
   darky: "darky0354_07740",
-  mangle: "mangledrake",
-  "mangle-drake": "mangledrake",
-  lolbit: "lolbit_sys",
-  hater: "hater_sinister",
-  valkiria: "valkiria_walten",
+  mangle: "im_stilll_standing",
+  "mangle-drake": "im_stilll_standing",
+  lolbit: "imaginebeinglolbit",
+  hater: "hatersito",
+  valkiria: "valkiria0769",
+  stark: "starkhateseveryone",
+  sleepy: "sleepydreams2000",
+  darth10: "darth.10",
 };
 
 /* ── Facciones para filtro táctico ──────────────────────── */
@@ -829,7 +831,7 @@ function DossierAvatar({ slug }: { slug: string }) {
   );
 }
 
-/* Botón de copia de Discord */
+/* Botón de copia de Discord — badge visible e interactivo */
 function DiscordChip({
   slug,
   copied,
@@ -847,17 +849,17 @@ function DiscordChip({
     <button
       onClick={(e) => onCopy(e, slug)}
       title={`Copiar Discord: ${tag}`}
-      className="inline-flex items-center gap-1 rounded border border-white/10 bg-white/5 px-2 py-0.5 font-mono text-[9px] text-zinc-400 transition hover:border-red-500/50 hover:text-white"
+      className="inline-flex items-center gap-1.5 rounded-md border border-white/15 bg-black/60 px-2.5 py-1 font-mono text-xs font-medium text-zinc-200 backdrop-blur-sm transition hover:bg-black/90 hover:text-white hover:border-white/30"
     >
-      <SiDiscord className="h-2.5 w-2.5" />
-      <span>{isCopied ? "COPIED" : tag}</span>
-      {isCopied ? <Check className="h-2.5 w-2.5 text-emerald-400" /> : <Copy className="h-2.5 w-2.5" />}
+      <SiDiscord className="h-3.5 w-3.5 text-[#5865F2]" />
+      <span>{isCopied ? "COPIED!" : `@${tag}`}</span>
+      {isCopied && <Check className="h-3.5 w-3.5 text-emerald-400" />}
     </button>
   );
 }
 
 /* ── Valkiria: Liquid Glass & Halo Sacro ─────────────────── */
-function ValkiriaCard({ m, t }: DossierProps) {
+function ValkiriaCard({ m, t, copied, onCopy }: DossierProps) {
   return (
     <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-amber-400/30 bg-gradient-to-b from-white/[0.08] via-amber-950/20 to-black/90 p-5 shadow-[0_8px_32px_0_rgba(245,158,11,0.2)] backdrop-blur-xl transition-all duration-500 hover:border-amber-400/70 hover:shadow-[0_8px_40px_0_rgba(245,158,11,0.4)]">
       {/* Fondo de retrato celestial */}
@@ -888,11 +890,14 @@ function ValkiriaCard({ m, t }: DossierProps) {
         }}
       />
 
-      <div className="relative flex items-center justify-between text-[10px] font-mono tracking-widest text-amber-300">
+      <div className="relative flex items-center justify-between gap-2 text-[10px] font-mono tracking-widest text-amber-300">
         <span>✦ SACRED ✦</span>
-        <span className="rounded border border-amber-400/40 bg-amber-400/10 px-1.5 py-0.5">
-          {t.tag}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="rounded border border-amber-400/40 bg-amber-400/10 px-1.5 py-0.5">
+            {t.tag}
+          </span>
+          <DiscordChip slug={m.slug} copied={copied} onCopy={onCopy} />
+        </div>
       </div>
 
       <div className="relative mt-auto flex flex-col items-center pt-4 text-center">
@@ -958,7 +963,7 @@ function HaterCard({ m, t, copied, onCopy }: DossierProps) {
 }
 
 /* ── STAR/K: Minimalismo Japonés y Kanji ─────────────────── */
-function StarkCard({ m, t }: DossierProps) {
+function StarkCard({ m, t, copied, onCopy }: DossierProps) {
   return (
     <div className="relative flex h-full flex-col overflow-hidden bg-[#0a090b] border border-zinc-800 p-5 transition-colors duration-300 hover:border-zinc-500">
       {/* Fondo cinemático: banner GIF con zoom suave en hover */}
@@ -992,13 +997,16 @@ function StarkCard({ m, t }: DossierProps) {
         style={{ transformOrigin: "left" }}
       />
 
-      <div className="relative z-10 flex items-center justify-between font-mono text-[9px] tracking-[0.4em] text-zinc-400">
+      <div className="relative z-10 flex items-center justify-between gap-2 font-mono text-[9px] tracking-[0.4em] text-zinc-400">
         <span className="text-zinc-300 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
           [ RONIN // STEEL ]
         </span>
-        <span className="rounded border border-zinc-700 bg-black/50 px-1.5 py-0.5 text-zinc-300 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
-          {t.tag}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="rounded border border-zinc-700 bg-black/50 px-1.5 py-0.5 text-zinc-300 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
+            {t.tag}
+          </span>
+          <DiscordChip slug={m.slug} copied={copied} onCopy={onCopy} />
+        </div>
       </div>
 
       <div className="relative z-10 mt-auto pt-6">
@@ -1265,7 +1273,7 @@ function DarkyCard({ m, copied, onCopy }: DossierProps) {
 }
 
 /* ── Dramatic: Ethereal Sky Drift ────────────────────────── */
-function DramaticCard({ m, t }: DossierProps) {
+function DramaticCard({ m, t, copied, onCopy }: DossierProps) {
   return (
     <div className="relative flex h-full flex-col justify-between overflow-hidden border border-sky-500/30 bg-gradient-to-b from-sky-950/30 via-black/80 to-black p-5 transition-all duration-300 hover:border-sky-400 hover:shadow-[0_0_25px_rgba(56,189,248,0.25)]">
       <div className="absolute inset-0">
@@ -1277,11 +1285,14 @@ function DramaticCard({ m, t }: DossierProps) {
         />
       </div>
 
-      <div className="relative flex items-center justify-between font-mono text-[9px] text-sky-400">
+      <div className="relative flex items-center justify-between gap-2 font-mono text-[9px] text-sky-400">
         <span>ETHEREAL // SKY</span>
-        <span className="rounded border border-sky-400/30 bg-sky-400/10 px-1.5 py-0.5">
-          {t.tag}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="rounded border border-sky-400/30 bg-sky-400/10 px-1.5 py-0.5">
+            {t.tag}
+          </span>
+          <DiscordChip slug={m.slug} copied={copied} onCopy={onCopy} />
+        </div>
       </div>
 
       <div className="relative my-auto flex items-center gap-3.5 pt-2">
@@ -1319,7 +1330,7 @@ function DramaticCard({ m, t }: DossierProps) {
 }
 
 /* ── Darth10: Otaku Specialist ───────────────────────────── */
-function DarthCard({ m, t }: DossierProps) {
+function DarthCard({ m, t, copied, onCopy }: DossierProps) {
   return (
     <div className="relative flex h-full flex-col justify-between overflow-hidden border border-cyan-500/30 bg-[#040c12] p-5 transition-all duration-300 hover:border-cyan-400 hover:shadow-[0_0_25px_rgba(6,182,212,0.25)]">
       <div className="relative flex items-center justify-between font-mono text-[9px] text-cyan-400">
@@ -1343,6 +1354,10 @@ function DarthCard({ m, t }: DossierProps) {
         <p className="font-mono text-xs text-cyan-200">“{m.quote}”</p>
       </div>
 
+      <div className="relative my-2">
+        <DiscordChip slug={m.slug} copied={copied} onCopy={onCopy} />
+      </div>
+
       <div className="relative mt-2 flex items-center justify-between font-mono text-[9px] text-cyan-400">
         <span className="flex items-center gap-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
@@ -1355,7 +1370,7 @@ function DarthCard({ m, t }: DossierProps) {
 }
 
 /* ── Sleepy: Alt Grunge .EXE ─────────────────────────────── */
-function SleepyCard({ m, t }: DossierProps) {
+function SleepyCard({ m, t, copied, onCopy }: DossierProps) {
   return (
     <div className="relative flex h-full flex-col overflow-hidden border-2 border-red-900 bg-[#120709] transition hover:border-red-600">
       {/* Fondo viñeta / cómic ilustrado */}
@@ -1380,12 +1395,16 @@ function SleepyCard({ m, t }: DossierProps) {
       </div>
 
       <div className="relative flex flex-1 flex-col p-4">
-        <div className="flex items-center gap-3">
+        <div className="mt-3 flex items-center gap-3">
           <DossierAvatar slug={m.slug} />
           <div>
             <h3 className="font-sans text-lg font-bold text-stone-100">{m.displayName}</h3>
             <p className="text-xs text-stone-400 font-mono">{m.role}</p>
           </div>
+        </div>
+
+        <div className="mt-3">
+          <DiscordChip slug={m.slug} copied={copied} onCopy={onCopy} />
         </div>
 
         <p className="mt-3 font-serif text-xs italic text-stone-200 leading-relaxed">

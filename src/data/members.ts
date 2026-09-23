@@ -5,6 +5,7 @@ export interface Member {
   status?: string;
   quote?: string;
   isLeader?: boolean;
+  discord?: string;
 }
 
 export const members: Member[] = [
@@ -15,6 +16,7 @@ export const members: Member[] = [
     status: "SYS.ONLINE // PORT 0x7F",
     quote: "SYSTEM ONLINE. Playtime is over.",
     isLeader: true,
+    discord: "imaginebeinglolbit",
   },
   {
     slug: "hater",
@@ -22,6 +24,7 @@ export const members: Member[] = [
     role: "The Corrupted Echo // Lord of Sinister Minds",
     status: "ONLINE",
     quote: "HELLO. DO YOU WANT TO PLAY WITH ME?",
+    discord: "hatersito",
   },
   {
     slug: "valkiria",
@@ -29,6 +32,7 @@ export const members: Member[] = [
     role: "The Gospel of the Lost",
     status: "ACTIVE // ON PATROL",
     quote: "The lost don't kneel.",
+    discord: "valkiria0769",
   },
   {
     slug: "nothing",
@@ -43,6 +47,7 @@ export const members: Member[] = [
     role: "Iron Will // Ghost of Tsushima",
     status: "HONOR // IN EXILE",
     quote: "Cut your own fate.",
+    discord: "starkhateseveryone",
   },
   {
     slug: "dramatic",
@@ -64,6 +69,7 @@ export const members: Member[] = [
     role: "Lazy Gamer // Otaku Specialist",
     status: "AFK // WATCHING ANIME",
     quote: "Lazy days, lucky stars.",
+    discord: "darth.10",
   },
   {
     slug: "mangle",
@@ -71,6 +77,7 @@ export const members: Member[] = [
     role: "Kids' Cove // Tactical Animatronic",
     status: "READY // CAM_12 ACTIVE",
     quote: "Tactical. Loyal. Still hungry.",
+    discord: "im_stilll_standing",
   },
   {
     slug: "sleepy",
@@ -78,6 +85,7 @@ export const members: Member[] = [
     role: "The Climber // Alt Grunge",
     status: "ONLINE // ASLEEP",
     quote: "dibujando historias que se niegan a terminar.",
+    discord: "sleepydreams2000",
   },
 ];
 
