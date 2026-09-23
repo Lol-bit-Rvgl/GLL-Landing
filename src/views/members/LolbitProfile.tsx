@@ -381,23 +381,31 @@ function IndexRow({
   open,
   onToggle,
   onHover,
+  onPlayClick,
 }: {
   entry: IndexEntry;
   open: boolean;
   onToggle: () => void;
   onHover: (entry: IndexEntry | null) => void;
+  onPlayClick?: (freq?: number, duration?: number) => void;
 }) {
   return (
     <li className="border-t border-neutral-800/80">
       {/* Strip horizontal */}
       <div
-        onMouseEnter={() => onHover(entry)}
+        onMouseEnter={() => {
+          onHover(entry);
+          onPlayClick?.(920, 0.015);
+        }}
         onMouseLeave={() => onHover(null)}
         className="group flex w-full items-baseline justify-between gap-3 py-8 text-left transition-colors duration-300 sm:gap-6"
       >
         {/* Clickable area for expanding accordion */}
         <button
-          onClick={onToggle}
+          onClick={() => {
+            onToggle();
+            onPlayClick?.(open ? 650 : 820, 0.025);
+          }}
           aria-expanded={open}
           className="flex min-w-0 flex-1 items-baseline justify-between gap-4 text-left transition-colors hover:text-[#f97316]"
         >
@@ -434,6 +442,7 @@ function IndexRow({
             href={entry.repoUrl}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => onPlayClick?.(1100, 0.025)}
             title={`View ${entry.title} on GitHub`}
             className="flex shrink-0 items-center justify-center rounded p-1 text-neutral-600 transition-colors hover:text-[#f97316]"
           >
@@ -463,6 +472,7 @@ function IndexRow({
                     href={entry.repoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => onPlayClick?.(1100, 0.025)}
                     className="inline-flex items-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900/80 px-4 py-2 font-mono text-xs font-semibold text-[#f97316] transition-all hover:border-[#f97316] hover:bg-[#f97316]/10 hover:text-white"
                   >
                     <span>VIEW REPOSITORY ON GITHUB</span>
@@ -676,9 +686,10 @@ interface ChatMessage {
 interface LolbitChatModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onPlayClick?: (freq?: number, duration?: number) => void;
 }
 
-function LolbitChatModal({ isOpen, onClose }: LolbitChatModalProps) {
+function LolbitChatModal({ isOpen, onClose, onPlayClick }: LolbitChatModalProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
@@ -708,6 +719,7 @@ function LolbitChatModal({ isOpen, onClose }: LolbitChatModalProps) {
     const raw = (textToSend ?? inputVal).trim();
     if (!raw || isLoading) return;
 
+    onPlayClick?.(860, 0.025);
     const newHistory: ChatMessage[] = [...messages, { role: "user", content: raw }];
     setMessages(newHistory);
     setInputVal("");
@@ -771,7 +783,10 @@ function LolbitChatModal({ isOpen, onClose }: LolbitChatModalProps) {
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={() => {
+              onPlayClick?.(580, 0.025);
+              onClose();
+            }}
             className="flex items-center gap-1.5 rounded-lg border border-neutral-800 bg-neutral-900/60 px-2.5 py-1 font-mono text-xs text-neutral-400 transition-colors hover:border-neutral-600 hover:text-white"
           >
             <span>ESC</span>
@@ -880,6 +895,10 @@ export function LolbitProfile({ member }: { member: Member }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  const audioCtxRef = useRef<AudioContext | null>(null);
 
   const telemetry = useDeviceTelemetry();
   const { data: lanyardData } = useLanyard("1066501844177797171");
@@ -888,6 +907,87 @@ export function LolbitProfile({ member }: { member: Member }) {
   const activeGameOrCode = lanyardData?.activities?.find(
     (a) => a.type !== 2 && a.name !== "Spotify" && a.name !== "Custom Status" && a.type !== 4
   );
+
+  // Micro-audio sintetizado táctico (Web Audio API pura, cero archivos externos)
+  const playClick = useCallback(
+    (freq = 800, duration = 0.025) => {
+      if (!audio) return;
+      try {
+        const AudioCtx =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext })
+            .webkitAudioContext;
+        if (!AudioCtx) return;
+        if (!audioCtxRef.current || audioCtxRef.current.state === "closed") {
+          audioCtxRef.current = new AudioCtx();
+        }
+        const ctx = audioCtxRef.current;
+        if (ctx.state === "suspended") {
+          ctx.resume();
+        }
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(
+          freq * 0.45,
+          ctx.currentTime + duration
+        );
+
+        gain.gain.setValueAtTime(0.04, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(
+          0.0001,
+          ctx.currentTime + duration
+        );
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch {
+        // Ignorar si el navegador bloquea audio antes de interacción
+      }
+    },
+    [audio]
+  );
+
+  const toggleAudio = useCallback(() => {
+    setAudio((prev) => {
+      const next = !prev;
+      if (next) {
+        setTimeout(() => {
+          try {
+            const AudioCtx =
+              window.AudioContext ||
+              (window as unknown as { webkitAudioContext: typeof AudioContext })
+                .webkitAudioContext;
+            if (AudioCtx) {
+              if (!audioCtxRef.current) audioCtxRef.current = new AudioCtx();
+              const ctx = audioCtxRef.current;
+              ctx.resume().then(() => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(950, ctx.currentTime);
+                gain.gain.setValueAtTime(0.05, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(
+                  0.0001,
+                  ctx.currentTime + 0.04
+                );
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.04);
+              });
+            }
+          } catch {}
+        }, 30);
+      }
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -904,28 +1004,62 @@ export function LolbitProfile({ member }: { member: Member }) {
     return () => clearInterval(id);
   }, []);
 
+  // Ambient mouse spotlight listener
+  useEffect(() => {
+    if (!mounted) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mounted]);
+
+  // Scroll indicator hairline listener
+  useEffect(() => {
+    if (!mounted) return;
+    const handleScroll = () => {
+      const total = document.documentElement.scrollHeight - window.innerHeight;
+      if (total > 0) {
+        setScrollProgress(Math.min(1, Math.max(0, window.scrollY / total)));
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [mounted]);
+
   // Listener global de teclado (Ctrl+K / Cmd+K y Escape) — solo tras montar
   useEffect(() => {
     if (!mounted) return;
     const handleGlobalKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        setIsChatOpen((prev) => !prev);
+        setIsChatOpen((prev) => {
+          const next = !prev;
+          playClick(next ? 1000 : 600, 0.025);
+          return next;
+        });
       } else if (e.key === "Escape") {
-        setIsChatOpen(false);
+        setIsChatOpen((prev) => {
+          if (prev) playClick(550, 0.025);
+          return false;
+        });
       }
     };
     window.addEventListener("keydown", handleGlobalKey);
     return () => window.removeEventListener("keydown", handleGlobalKey);
-  }, [mounted]);
+  }, [mounted, playClick]);
 
-  const copyText = useCallback((text: string, key: string) => {
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(text);
-      setCopiedKey(key);
-      setTimeout(() => setCopiedKey(null), 2000);
-    }
-  }, []);
+  const copyText = useCallback(
+    (text: string, key: string) => {
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        navigator.clipboard.writeText(text);
+        setCopiedKey(key);
+        playClick(1200, 0.035);
+        setTimeout(() => setCopiedKey(null), 2000);
+      }
+    },
+    [playClick]
+  );
 
   if (!mounted) {
     return (
@@ -939,13 +1073,42 @@ export function LolbitProfile({ member }: { member: Member }) {
   }
 
   return (
-    <main className="min-h-screen bg-[#060608] text-neutral-300 antialiased selection:bg-[#f97316]/30">
+    <main className="relative min-h-screen bg-[#060608] text-neutral-300 antialiased selection:bg-[#f97316]/30 overflow-x-hidden">
       <style>{FX_STYLES}</style>
+
+      {/* ══ SCROLL PROGRESS HAIRLINE ══ */}
+      <div
+        aria-hidden="true"
+        className="fixed top-0 left-0 right-0 z-50 h-[1.5px] bg-neutral-900/40 pointer-events-none"
+      >
+        <div
+          className="h-full bg-gradient-to-r from-[#f97316]/60 via-[#f97316] to-amber-400 origin-left transition-transform duration-75 ease-out"
+          style={{ transform: `scaleX(${scrollProgress})` }}
+        />
+      </div>
+
+      {/* ══ NOISE OVERLAY CINEMATOGRÁFICO ══ */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-40 opacity-[0.025] mix-blend-screen"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+        }}
+      />
+
+      {/* ══ AMBIENT MOUSE SPOTLIGHT ══ */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300"
+        style={{
+          background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(245, 158, 11, 0.035), transparent 80%)`,
+        }}
+      />
 
       {/* Visor flotante que sigue al cursor */}
       <FloatingPreview entry={hovered} />
 
-      <article className="mx-auto max-w-5xl px-6 pb-24 pt-16 sm:pt-24">
+      <article className="relative z-10 mx-auto max-w-5xl px-6 pb-24 pt-16 sm:pt-24">
         {/* ══ TOP BAR ULTRA LIMPIA ══ */}
         <header className="flex items-center justify-between border-b border-neutral-800/80 pb-5 font-mono text-[11px] tracking-widest">
           <Link
@@ -959,7 +1122,7 @@ export function LolbitProfile({ member }: { member: Member }) {
           <div className="flex items-center gap-4 sm:gap-6">
             {/* Micro-toggle AUDIO */}
             <button
-              onClick={() => setAudio((a) => !a)}
+              onClick={toggleAudio}
               aria-pressed={audio}
               className="inline-flex items-center gap-1.5 text-neutral-500 transition-colors hover:text-neutral-200"
             >
@@ -1064,6 +1227,7 @@ export function LolbitProfile({ member }: { member: Member }) {
                 open={openIndex === i}
                 onToggle={() => setOpenIndex(openIndex === i ? null : i)}
                 onHover={setHovered}
+                onPlayClick={playClick}
               />
             ))}
           </ul>
@@ -1166,7 +1330,10 @@ export function LolbitProfile({ member }: { member: Member }) {
 
       {/* ══ PÍLDORA FLOTANTE DIEGÉTICA (FIXED BOTTOM RIGHT) ══ */}
       <button
-        onClick={() => setIsChatOpen(true)}
+        onClick={() => {
+          playClick(1000, 0.025);
+          setIsChatOpen(true);
+        }}
         className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2.5 rounded-full bg-neutral-950/80 border border-neutral-800 hover:border-amber-500/40 text-neutral-300 text-xs font-mono py-2 px-3.5 shadow-2xl backdrop-blur-md transition-all hover:text-white"
         title="Transmitir señal (Ctrl+K / ⌘K)"
       >
@@ -1178,7 +1345,14 @@ export function LolbitProfile({ member }: { member: Member }) {
       </button>
 
       {/* ══ MODAL CONVERSACIONAL POLY AI ══ */}
-      <LolbitChatModal isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      <LolbitChatModal
+        isOpen={isChatOpen}
+        onClose={() => {
+          playClick(580, 0.025);
+          setIsChatOpen(false);
+        }}
+        onPlayClick={playClick}
+      />
     </main>
   );
 }
