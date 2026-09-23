@@ -34,6 +34,8 @@ Idioma:
 
 export async function POST(req: Request) {
   try {
+    console.log("GROQ_KEY_EXISTS:", Boolean(process.env.GROQ_API_KEY));
+
     const body = await req.json();
     const { messages } = body;
 
@@ -47,11 +49,23 @@ export async function POST(req: Request) {
       });
     }
 
+    // Normalizar mensajes: solo roles admitidos y content no vacío
+    const ALLOWED_ROLES = new Set(["system", "user", "assistant"]);
+    const clean = (Array.isArray(messages) ? messages : []).filter(
+      (m: { role?: unknown; content?: unknown }) =>
+        typeof m === "object" &&
+        m !== null &&
+        typeof m.role === "string" &&
+        ALLOWED_ROLES.has(m.role) &&
+        typeof m.content === "string" &&
+        m.content.trim().length > 0
+    );
+
     const payload = {
-      model: "llama-3.3-70b-versatile",
+      model: "openai/gpt-oss-20b",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
-        ...(Array.isArray(messages) ? messages : []),
+        ...clean,
       ],
       temperature: 0.7,
       max_tokens: 1024,
@@ -61,16 +75,16 @@ export async function POST(req: Request) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey?.trim()}`,
       },
       body: JSON.stringify(payload),
     });
 
     if (!groqRes.ok) {
       const errText = await groqRes.text();
-      console.error("[Groq API Error]:", groqRes.status, errText);
+      console.error("GROQ ERROR DETAILS:", groqRes.status, errText);
 
-      // Si falla por modelo o límite de cuota, intentamos con llama-3.1-8b-instant como fallback
+      // Si falla por modelo o límite de cuota, intentamos con qwen/qwen3.8-27b como fallback
       if (groqRes.status === 404 || groqRes.status === 429) {
         const fallbackRes = await fetch(
           "https://api.groq.com/openai/v1/chat/completions",
@@ -78,11 +92,11 @@ export async function POST(req: Request) {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
+              Authorization: `Bearer ${apiKey?.trim()}`,
             },
             body: JSON.stringify({
               ...payload,
-              model: "llama-3.1-8b-instant",
+              model: "qwen/qwen3.8-27b",
             }),
           }
         );
