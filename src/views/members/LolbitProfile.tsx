@@ -91,97 +91,151 @@ interface IndexEntry {
 const INDEX: IndexEntry[] = [
   {
     id: "01",
-    title: "KYUBI SOCIAL CORE",
-    tag: "DISTRIBUTED SOCKETS",
+    title: "KIWISOCIAL BACKEND",
+    tag: "API & INFRASTRUCTURE",
     year: "2026",
     status: "DEPLOYED",
     statusClass: "text-emerald-400",
-    previewImage: "/images/members/lolbit/monitors.jpeg",
+    previewImage: "/images/projects/kiwi-back.jpg",
     telemetry: [
-      ["SIGNAL", "84.2 MHz"],
-      ["HYDRATION", "100%"],
-      ["LATENCY", "12ms"],
+      ["RUNTIME", "Node.js / Express"],
+      ["DATABASE", "PostgreSQL"],
+      ["REALTIME", "WebSockets"],
     ],
     drawer: {
-      stack: ["Next.js", "TypeScript", "WebSockets", "Tailwind CSS", "REST"],
+      stack: [
+        "Node.js / Express",
+        "PostgreSQL",
+        "JWT Authentication",
+        "WebSockets",
+        "REST APIs",
+      ],
       problem:
-        "Cliente social en tiempo real: feed reactivo, hidratación de estado en cliente y experiencia consistente entre plataformas. Sockets distribuidos mantienen la presencia sincronizada sin sacrificar el primer render.",
+        "Núcleo backend para red social distribuida. Gestión de autenticación segura, persistencia de sesiones, endpoints RESTful y comunicación bidireccional en tiempo real para mensajería y eventos.",
       perf: [
-        ["FIRST PAINT", "0.9s"],
-        ["SOCKET RECONNECT", "< 800ms"],
-        ["STATE SYNC", "optimistic"],
+        ["LATENCY", "< 25ms RTT"],
+        ["AUTH", "Stateless JWT"],
+        ["EVENTS", "Real-time Sockets"],
       ],
     },
   },
   {
     id: "02",
-    title: "TACTICAL ARCHIVE",
-    tag: "3D WEBGL RUNTIME",
-    year: "2025",
-    status: "ONLINE",
+    title: "KIWISOCIAL FRONTEND",
+    tag: "MOBILE CLIENT",
+    year: "2026",
+    status: "ACTIVE",
     statusClass: "text-[#f97316]",
-    previewImage: "/images/members/lolbit/fondo.jpg",
+    previewImage: "/images/projects/kiwi-front.jpg",
     telemetry: [
-      ["GPU", "WebGL // instanced"],
-      ["SOUND", "diegetic loop"],
-      ["ENTITIES", "36 active"],
+      ["CORE", "Flutter / Dart"],
+      ["STATE", "Riverpod"],
+      ["LAYOUT", "Defensive Slivers"],
     ],
     drawer: {
-      stack: ["Next.js", "Three.js", "React Three Fiber", "USDZ", "WebAudio"],
+      stack: [
+        "Flutter",
+        "Dart",
+        "Riverpod / State Management",
+        "Defensive UI Layouts",
+        "REST Integration",
+      ],
       problem:
-        "Archivo 3D diegético para el clan GLL: renderizado instanciado en WebGL, diseño sonoro ambiental y carga diferida de escenas complejas sin congelar el hilo principal.",
+        "Aplicación móvil multiplataforma. Arquitectura desacoplada, renderizado reactivo con CustomScrollView slivers, diseño defensivo para prevenir desbordes de viewport y consumo optimizado de microservicios.",
       perf: [
-        ["FRAME BUDGET", "16ms"],
-        ["MODEL PAYLOAD", "scene.usdz"],
-        ["DRAW CALLS", "batched"],
+        ["FRAME RATE", "60 / 120 FPS"],
+        ["CACHE LAYER", "In-Memory State"],
+        ["VIEWPORT", "Defensive Safe-Bounds"],
       ],
     },
   },
   {
     id: "03",
-    title: "ZERO-TRUST TUNNEL",
-    tag: "SECURITY PARADIGM",
-    year: "2025",
-    status: "CLASSIFIED",
-    statusClass: "text-red-400",
-    previewImage: "/images/members/lolbit/static.jpg",
+    title: "KIWISOCIAL LANDING",
+    tag: "WEB PLATFORM",
+    year: "2026",
+    status: "ONLINE",
+    statusClass: "text-emerald-400",
+    previewImage: "/images/projects/kiwi-landing.jpg",
     telemetry: [
-      ["SSH", "reverse tunnel"],
-      ["JWT", "rotated keys"],
-      ["HONEY-GRID", "armed"],
+      ["STACK", "Next.js / TypeScript"],
+      ["STYLE", "Tailwind CSS"],
+      ["RENDER", "Static / SSG"],
     ],
     drawer: {
-      stack: ["SSH Reverse Tunneling", "JWT", "Proxies", "Honeypots", "Python"],
+      stack: [
+        "Next.js",
+        "TypeScript",
+        "Tailwind CSS",
+        "Framer Motion",
+        "SEO Optimization",
+      ],
       problem:
-        "Infraestructura de laboratorio controlado: túneles reversos para exponer servicios sin abrir puertos, autenticación con claves rotadas y trampas defensivas con telemetría de intrusiones.",
+        "Portal web y punto de entrada para KiwiSocial. Enfoque editorial responsivo, animaciones dinámicas optimizadas por hardware y arquitectura estática prerenderizada.",
       perf: [
-        ["INTRUSION LOGS", "streaming"],
-        ["KEY ROTATION", "automated"],
-        ["OPEN PORTS", "0"],
+        ["LIGHTHOUSE", "99+ Perf"],
+        ["HYDRATION", "Instant SSG"],
+        ["MOTION", "Hardware GPU"],
       ],
     },
   },
   {
     id: "04",
-    title: "RUNTIME PHILOSOPHY",
-    tag: "AUTONOMOUS LOGS",
-    year: "2024",
-    status: "ONLINE",
-    statusClass: "text-[#f97316]",
-    previewImage: "/images/members/lolbit/terminal.jpg",
+    title: "PANDLEY LANDING",
+    tag: "SHOWCASE & PRODUCT",
+    year: "2025",
+    status: "STABLE",
+    statusClass: "text-cyan-400",
+    previewImage: "/images/projects/pandley.jpg",
     telemetry: [
-      ["MEMORY", "512MB warm"],
-      ["CACHE HIT", "97.4%"],
-      ["IDENTITY", "autonomous"],
+      ["CORE", "Next.js / React"],
+      ["STYLE", "Tailwind CSS"],
+      ["FOCUS", "Interactive UX"],
     ],
     drawer: {
-      stack: ["Flutter", "Dart", "Memory Caching", "Reactive State"],
+      stack: [
+        "Next.js",
+        "React",
+        "Tailwind CSS",
+        "Responsive Design",
+        "Interactive UX",
+      ],
       problem:
-        "Manifiesto técnico de deconstrucción ética: entender los sistemas desde dentro, cachear la memoria relevante y construir identidad digital soberana. Playtime is over.",
+        "Plataforma web de presentación comercial y producto con diseño centrado en el usuario, interfaces de alto contraste y tiempos de carga reducidos.",
       perf: [
-        ["COLD BOOT", "1.2s"],
-        ["CACHE LAYER", "perceptual"],
-        ["ETHICS", "non-negotiable"],
+        ["LOAD TIME", "< 0.8s"],
+        ["RESPONSIVE", "Fluid Grid"],
+        ["UX CONTRAST", "AAA Standard"],
+      ],
+    },
+  },
+  {
+    id: "05",
+    title: "HONEY",
+    tag: "SECURITY & TELEMETRY",
+    year: "2026",
+    status: "LAB // DEFENSE",
+    statusClass: "text-purple-400",
+    previewImage: "/images/projects/honey.jpg",
+    telemetry: [
+      ["DOMAIN", "Network Security"],
+      ["TUNNEL", "Reverse SSH"],
+      ["DEFENSE", "Honeypot Traps"],
+    ],
+    drawer: {
+      stack: [
+        "Network Security",
+        "Reverse Tunneling",
+        "Honeypot Architecture",
+        "Proxy Traps",
+        "Logging",
+      ],
+      problem:
+        "Infraestructura experimental de seguridad perimetral y señuelo. Detección proactiva de intrusiones, monitoreo de tráfico anómalo y registro forense de vectores de ataque.",
+      perf: [
+        ["LOGGING", "Real-time Forensics"],
+        ["INGRESS", "Zero Open Ports"],
+        ["DECOYS", "Active Traps"],
       ],
     },
   },
@@ -253,15 +307,27 @@ function FloatingPreview({ entry }: { entry: IndexEntry | null }) {
     >
       <div className="overflow-hidden rounded-md border border-neutral-700/80 bg-neutral-950/90 shadow-[0_20px_60px_rgba(0,0,0,0.7),0_0_30px_rgba(249,115,22,0.12)] backdrop-blur-md">
         {/* Imagen técnica + scanlines */}
-        <div className="relative h-32 w-full overflow-hidden">
+        <div className="relative h-32 w-full overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-950 to-[#080506] flex items-center justify-center">
           {entry && (
-            <Image
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
               src={entry.previewImage}
-              alt=""
-              fill
-              className="object-cover opacity-80"
+              alt={entry.title}
+              onError={(e) => {
+                (e.target as HTMLElement).style.display = "none";
+              }}
+              className="absolute inset-0 h-full w-full object-cover opacity-75"
             />
           )}
+          {/* Fallback gráfico / placeholder si el asset aún no se ha subido */}
+          <div className="pointer-events-none flex flex-col items-center justify-center p-4 text-center select-none">
+            <span className="font-mono text-xl font-black tracking-widest text-[#f97316]/40">
+              {entry?.id} // GLL
+            </span>
+            <span className="font-mono text-[9px] tracking-[0.2em] text-neutral-500 uppercase mt-1">
+              {entry?.tag}
+            </span>
+          </div>
           <span aria-hidden className="lolbit-preview-scan absolute inset-0" />
           <span
             aria-hidden
@@ -622,10 +688,24 @@ function InteractiveTerminal({
         <div className="space-y-1 text-xs text-neutral-300">
           <p className="text-neutral-500 font-semibold tracking-wider uppercase">Available directives:</p>
           <p><span className="text-[#f97316] font-bold">help</span> - Display list of available directives</p>
+          <p><span className="text-[#f97316] font-bold">projects</span> - List deployed architectures and live system status</p>
           <p><span className="text-[#f97316] font-bold">status</span> - Display node integrity and live Discord presence</p>
           <p><span className="text-[#f97316] font-bold">device</span> - Run real-time client hardware &amp; WebGL telemetry</p>
           <p><span className="text-[#f97316] font-bold">contact</span> - Output direct transmission links &amp; email</p>
           <p><span className="text-[#f97316] font-bold">clear</span> - Purge screen buffer</p>
+        </div>
+      );
+    } else if (cmd === "projects") {
+      output = (
+        <div className="space-y-1.5 text-xs text-neutral-300">
+          <p className="text-[#f97316] font-semibold tracking-wider uppercase">[ DEPLOYED ARCHITECTURES &amp; SYSTEMS ]</p>
+          <div className="space-y-1 pl-1">
+            <p><span className="font-bold text-white">01. KIWISOCIAL BACKEND</span> <span className="text-emerald-400 font-mono text-[10px]">[DEPLOYED]</span> — API &amp; Infrastructure (Node/Express, PostgreSQL, Sockets)</p>
+            <p><span className="font-bold text-white">02. KIWISOCIAL FRONTEND</span> <span className="text-[#f97316] font-mono text-[10px]">[ACTIVE]</span> — Mobile Client (Flutter, Riverpod, Slivers)</p>
+            <p><span className="font-bold text-white">03. KIWISOCIAL LANDING</span> <span className="text-emerald-400 font-mono text-[10px]">[ONLINE]</span> — Web Platform (Next.js, TS, Tailwind)</p>
+            <p><span className="font-bold text-white">04. PANDLEY LANDING</span> <span className="text-cyan-400 font-mono text-[10px]">[STABLE]</span> — Showcase &amp; Product (React, Responsive UX)</p>
+            <p><span className="font-bold text-white">05. HONEY</span> <span className="text-purple-400 font-mono text-[10px]">[LAB // DEFENSE]</span> — Security &amp; Telemetry (Reverse SSH, Honeypot)</p>
+          </div>
         </div>
       );
     } else if (cmd === "status") {
@@ -927,14 +1007,14 @@ export function LolbitProfile({ member }: { member: Member }) {
           </div>
         </div>
 
-        {/* ══ THE INTERACTIVE INDEX ══ */}
+        {/* ══ THE HIGHLIGHT REEL ══ */}
         <section aria-label="Systems and projects index">
           <div className="flex items-baseline justify-between pb-4">
             <h2 className="font-mono text-[10px] font-bold tracking-[0.35em] text-neutral-500 uppercase">
-              The Index // Systems &amp; Projects
+              The Highlight Reel // Real-World Systems
             </h2>
             <span className="font-mono text-[10px] tracking-widest text-neutral-600">
-              04 ENTRIES // CLICK TO EXPAND
+              05 ENTRIES // CLICK TO EXPAND
             </span>
           </div>
 
