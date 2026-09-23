@@ -40,6 +40,27 @@ const FX_STYLES = `
 }
 .jitter-hover:hover { animation: jitter 0.35s steps(2) infinite; }
 .lolbit-glitch:hover { animation: card-glitch 2.4s linear infinite; }
+@keyframes quartz-leak {
+  0%, 93%, 100% {
+    transform: translateX(0);
+    filter: none;
+  }
+  94% {
+    transform: translateX(2px);
+    filter: drop-shadow(-1px 0 0 rgba(6,182,212,0.35)) drop-shadow(1px 0 0 rgba(239,68,68,0.35));
+  }
+  95% {
+    transform: translateX(-1px);
+    filter: drop-shadow(1px 0 0 rgba(6,182,212,0.25)) drop-shadow(-1px 0 0 rgba(239,68,68,0.25));
+  }
+  96% {
+    transform: translateX(0);
+    filter: none;
+  }
+}
+.quartz-glitch {
+  animation: quartz-leak 8s ease-in-out infinite;
+}
 .scanlines {
   background-image: repeating-linear-gradient(0deg, rgba(0,0,0,0.3) 0px, rgba(0,0,0,0.3) 1px, transparent 1px, transparent 4px);
 }
@@ -1086,47 +1107,193 @@ function NothingCard({ m, copied, onCopy }: DossierProps) {
   );
 }
 
-/* ── Lolbit: Terminal Deconstruida Hacker ─────────────────── */
+/* ── Lanyard Types & Hook ───────────────────────────────────── */
+interface LanyardSpotify {
+  track_id: string;
+  song: string;
+  artist: string;
+  album_art_url: string;
+  album?: string;
+}
+
+interface LanyardActivity {
+  type: number;
+  name: string;
+  state?: string;
+  details?: string;
+  id?: string;
+}
+
+interface LanyardData {
+  discord_status: "online" | "idle" | "dnd" | "offline";
+  activities: LanyardActivity[];
+  listening_to_spotify: boolean;
+  spotify: LanyardSpotify | null;
+}
+
+function useLanyard(userId: string) {
+  const [data, setData] = useState<LanyardData | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    let isSubscribed = true;
+
+    const fetchPresence = async () => {
+      try {
+        const res = await fetch(`https://api.lanyard.rest/v1/users/${userId}`);
+        if (!res.ok) return;
+        const json = await res.json();
+        if (isSubscribed && json.success && json.data) {
+          setData(json.data);
+        }
+      } catch {
+        // Fallback silencioso en caso de error de red
+      }
+    };
+
+    fetchPresence();
+    const interval = setInterval(fetchPresence, 15000);
+
+    return () => {
+      isSubscribed = false;
+      clearInterval(interval);
+    };
+  }, [userId]);
+
+  return { data, mounted };
+}
+
+/* ── Lolbit: Terminal Deconstruida Hacker // Liquid Glass + Lanyard ── */
 function LolbitCard({ m, t, copied, onCopy }: DossierProps) {
+  const { data, mounted } = useLanyard("1066501844177797171");
+
+  const isLive = mounted && data?.discord_status && data.discord_status !== "offline";
+
+  // Identificar actividades fuera de Spotify y Custom Status
+  const otherActivity = data?.activities?.find(
+    (a) => a.type !== 2 && a.name !== "Spotify" && a.name !== "Custom Status" && a.type !== 4
+  );
+
   return (
-    <div className="lolbit-glitch relative flex h-full flex-col overflow-hidden border border-orange-500/40 bg-[#080506] p-5 transition-colors duration-300 hover:border-orange-400 hover:shadow-[0_0_30px_rgba(249,115,22,0.3)]">
-      <span aria-hidden className="scanlines pointer-events-none absolute inset-0 opacity-35" />
+    <div className="quartz-glitch lolbit-glitch relative flex h-full flex-col overflow-hidden rounded-2xl border border-amber-500/20 bg-white/[0.03] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-all duration-300 hover:border-amber-400/50 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.2),0_12px_40px_rgba(245,158,11,0.25)]">
+      {/* Reflejo especular superior estilo bisel de vidrio orgánico */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-20"
+        className="pointer-events-none absolute inset-x-0 top-0 h-32"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(245,158,11,0.03) 45%, transparent 100%)",
+        }}
+      />
+
+      {/* Scanlines y rejilla ámbar sutil de cuarzo */}
+      <span aria-hidden className="scanlines pointer-events-none absolute inset-0 opacity-20" />
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-15"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(249,115,22,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(249,115,22,0.1) 1px, transparent 1px)",
+            "linear-gradient(rgba(245,158,11,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.1) 1px, transparent 1px)",
           backgroundSize: "24px 24px",
         }}
       />
 
-      <div className="relative flex items-center justify-between font-mono text-[10px] tracking-widest text-orange-400">
+      {/* Header superior: telemetría y badge de presencia */}
+      <div className="relative flex items-center justify-between font-mono text-[10px] tracking-widest text-amber-400">
         <span>◢ MASTER NODE // 0x7F</span>
         <div className="flex items-center gap-2">
           <DiscordChip slug={m.slug} copied={copied} onCopy={onCopy} />
-          <span className="flex items-center gap-1 text-emerald-400 font-bold">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
-            LIVE
-          </span>
+          {mounted && isLive ? (
+            <span className="flex items-center gap-1.5 font-mono text-[10px] font-bold text-emerald-400">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+              </span>
+              LIVE
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5 font-mono text-[10px] text-neutral-400/80">
+              <span className="h-1.5 w-1.5 rounded-full bg-neutral-600" />
+              OFFLINE
+            </span>
+          )}
         </div>
       </div>
 
+      {/* Avatar e identidad */}
       <div className="relative mt-4 flex items-center gap-3">
         <DossierAvatar slug={m.slug} />
         <div>
-          <h3 className="gll-aberration font-mono text-2xl font-black text-orange-100">
+          <h3 className="gll-aberration font-mono text-2xl font-black text-amber-100">
             {m.displayName}
           </h3>
-          <p className="font-mono text-xs text-orange-400/80">{m.role}</p>
+          <p className="font-mono text-xs text-amber-400/80">{m.role}</p>
         </div>
       </div>
 
-      {/* Cita como comando ejecutable */}
-      <div className="relative mt-4 border border-orange-500/40 bg-black/80 px-3 py-2 font-mono">
-        <span className="text-[10px] text-orange-500/70">$ exec </span>
-        <span className="text-[11px] text-orange-200">“{m.quote}”</span>
-      </div>
+      {/* Actividad Dinámica en Vivo */}
+      {mounted && isLive && data?.listening_to_spotify && data.spotify ? (
+        <div className="relative mt-4 flex items-center justify-between gap-3 overflow-hidden rounded-xl border border-emerald-500/30 bg-black/60 p-2.5 font-mono">
+          <div className="flex items-center gap-2.5 min-w-0">
+            {data.spotify.album_art_url && (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={data.spotify.album_art_url}
+                alt={data.spotify.album ?? "Album"}
+                className="h-10 w-10 shrink-0 rounded-lg object-cover border border-emerald-500/30 shadow-sm"
+              />
+            )}
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-emerald-400">
+                <span className="text-xs">♫</span>
+                <span>LISTENING // SPOTIFY</span>
+              </div>
+              <p className="truncate text-xs font-medium text-emerald-100">
+                {data.spotify.song}{" "}
+                <span className="text-emerald-400/70">— {data.spotify.artist}</span>
+              </p>
+            </div>
+          </div>
+          <div className="flex h-4 items-end gap-0.5 shrink-0 pr-1" aria-hidden>
+            {Array.from({ length: 4 }, (_, i) => (
+              <span
+                key={i}
+                className="eq-mini w-1 rounded-sm bg-emerald-400"
+                style={{ animationDelay: `${(i % 4) * 0.18}s` }}
+              />
+            ))}
+          </div>
+        </div>
+      ) : mounted && isLive && otherActivity ? (
+        <div className="relative mt-4 flex items-center gap-2.5 overflow-hidden rounded-xl border border-amber-500/30 bg-black/60 px-3 py-2.5 font-mono">
+          <span className="text-amber-400 text-xs shrink-0">▶</span>
+          <div className="min-w-0 truncate text-xs">
+            <span className="font-semibold text-amber-200">
+              {otherActivity.name}
+            </span>
+            {(otherActivity.details || otherActivity.state) && (
+              <span className="text-amber-400/80">
+                : {otherActivity.details || otherActivity.state}
+              </span>
+            )}
+          </div>
+        </div>
+      ) : mounted && isLive ? (
+        <div className="relative mt-4 rounded-xl border border-amber-500/30 bg-black/60 px-3 py-2.5 font-mono">
+          <span className="text-[10px] text-amber-500/70">$ exec </span>
+          <span className="text-[11px] text-amber-200">
+            “SYSTEM ONLINE. Playtime is over.”
+          </span>
+        </div>
+      ) : (
+        <div className="relative mt-4 rounded-xl border border-white/10 bg-black/60 px-3 py-2.5 font-mono">
+          <span className="text-[10px] text-neutral-500">$ exec </span>
+          <span className="text-[11px] text-neutral-400">
+            --standby // RUNTIME SLEEP
+          </span>
+        </div>
+      )}
 
       {/* Mini ecualizador y frecuencia */}
       <div className="relative mt-auto pt-4">
@@ -1134,14 +1301,16 @@ function LolbitCard({ m, t, copied, onCopy }: DossierProps) {
           {Array.from({ length: 16 }, (_, i) => (
             <span
               key={i}
-              className="eq-mini w-full bg-orange-500/80"
+              className={`eq-mini w-full ${isLive ? "bg-amber-500/80" : "bg-neutral-600/50"}`}
               style={{ animationDelay: `${(i % 5) * 0.15}s` }}
             />
           ))}
         </div>
-        <div className="mt-1 flex items-center justify-between font-mono text-[9px] tracking-wider text-orange-500/80">
+        <div className="mt-1 flex items-center justify-between font-mono text-[9px] tracking-wider text-amber-500/80">
           <span>FREQ // 84.2MHz</span>
-          <span>{m.status ?? "SYS.ONLINE"}</span>
+          <span className={isLive ? "text-emerald-400" : "text-neutral-500"}>
+            {mounted ? (isLive ? "SYS.ONLINE" : "SYS.STANDBY") : "SYS.STANDBY"}
+          </span>
         </div>
       </div>
       <span aria-hidden className="gll-tear" />
