@@ -246,7 +246,7 @@ function IronManModelViewer() {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
     camera.position.set(0, 0.45, 4.3);
-    camera.lookAt(0, 0.1, 0);
+    camera.lookAt(0, 0, 0);
 
     scene.add(new THREE.AmbientLight(0x8899bb, 0.35));
     const redKey = new THREE.DirectionalLight(0xff4444, 1.1);
@@ -351,10 +351,12 @@ function IronManModelViewer() {
           const box = new THREE.Box3().setFromObject(m);
           const size = box.getSize(new THREE.Vector3());
           const center = box.getCenter(new THREE.Vector3());
-        const s = 3.3 / Math.max(size.x, size.y, size.z);
-        m.scale.setScalar(s);
-        m.position.sub(center.multiplyScalar(s));
-        m.position.y += 0.45;
+          // Referencia dominante: altura (size.y) -> el casco mantiene
+          // proporción real sin exagerar los ejes anchos/profundos.
+          const s = 2.6 / Math.max(size.y, 0.0001);
+          m.scale.setScalar(s);
+          m.position.sub(center.multiplyScalar(s));
+          m.position.y += 0.05;
           rig.add(m);
           setStatus("MESH // MARK VII");
         },
@@ -506,7 +508,7 @@ function IronManModelViewer() {
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
           onPointerLeave={onPointerLeave}
-          className="relative mx-auto h-64 w-full cursor-grab touch-none select-none active:cursor-grabbing sm:h-80"
+          className="relative mx-auto h-64 w-full overflow-hidden cursor-grab touch-none select-none active:cursor-grabbing sm:h-80"
         />
 
         {/* callouts flotantes: línea + etiqueta */}
