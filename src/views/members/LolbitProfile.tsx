@@ -1149,8 +1149,8 @@ export function LolbitProfile({ member }: { member: Member }) {
       <FloatingPreview entry={hovered} />
 
       <article className="relative z-10 mx-auto max-w-5xl px-6 pb-24 pt-16 sm:pt-24">
-        {/* ══ TOP BAR ULTRA LIMPIA & TÁCTICA ══ */}
-        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-800/80 pb-5 font-mono text-[11px] tracking-widest">
+        {/* ══ TOP BAR DESCONGESTIONADA Y ELEGANTE ══ */}
+        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-800/80 py-6 mb-12 sm:mb-16 font-mono text-xs text-neutral-400">
           <Link
             href="/"
             className="group inline-flex items-center gap-2 text-neutral-500 transition-colors hover:text-[#f97316]"
@@ -1159,137 +1159,120 @@ export function LolbitProfile({ member }: { member: Member }) {
             <span>[ ← BACK // GLL SECTOR ZERO ]</span>
           </Link>
 
-          {/* Widgets mecánicos interactivos en la cabecera */}
-          <div className="flex flex-wrap items-center gap-2.5 sm:gap-4">
-            {/* Micro-widget de telemetría de red: PING RTT */}
-            <div className="inline-flex items-center gap-2 rounded border border-neutral-800/80 bg-black/60 px-2.5 py-1 text-neutral-400 shadow-sm">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-              </span>
-              <span>
-                PING:{" "}
-                <span className="font-semibold text-emerald-400 tabular-nums">
-                  {telemetry.latencyMs !== null ? `${telemetry.latencyMs}ms` : "SCANNING"}
-                </span>
-                <span className="text-neutral-600"> // RTT</span>
-              </span>
-            </div>
+          {/* Agrupación derecha limpia con buen espaciado */}
+          <div className="flex items-center gap-4 sm:gap-6">
+            {/* Ping real en verde tenue */}
+            <span className="inline-flex items-center gap-1.5 tabular-nums text-neutral-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/80" />
+              <span>{telemetry.latencyMs !== null ? `${telemetry.latencyMs}ms` : "..."}</span>
+            </span>
 
-            {/* Toggle táctico CRT SCANLINES */}
+            {/* Switch CRT compacto */}
             <button
               onClick={toggleCrt}
               aria-pressed={crtScanlines}
-              className="inline-flex items-center gap-1.5 rounded border border-neutral-800/80 bg-black/60 px-2.5 py-1 text-neutral-400 transition-colors hover:border-amber-500/40 hover:text-neutral-200 shadow-sm"
-              title="Alternar filtro analógico CRT Scanlines"
+              className="inline-flex items-center gap-1 transition-colors hover:text-neutral-200"
+              title="Alternar filtro CRT Scanlines"
             >
-              <Tv className="h-3 w-3 text-[#f97316]" />
-              <span>
-                CRT SCANLINES:{" "}
-                <span className={crtScanlines ? "text-[#f97316] font-semibold" : "text-neutral-600"}>
-                  {crtScanlines ? "[ON]" : "[OFF]"}
-                </span>
+              <span>CRT:</span>
+              <span className={crtScanlines ? "text-[#f97316]" : "text-neutral-600"}>
+                {crtScanlines ? "[ON]" : "[OFF]"}
               </span>
             </button>
 
-            {/* Micro-toggle AUDIO */}
+            {/* Switch AUDIO compacto */}
             <button
               onClick={toggleAudio}
               aria-pressed={audio}
-              className="inline-flex items-center gap-1.5 rounded border border-neutral-800/80 bg-black/60 px-2.5 py-1 text-neutral-400 transition-colors hover:border-amber-500/40 hover:text-neutral-200 shadow-sm"
+              className="inline-flex items-center gap-1.5 transition-colors hover:text-neutral-200"
               title="Alternar micro-sonidos sintetizados"
             >
               {audio ? (
-                <Volume2 className="h-3 w-3 text-[#f97316]" />
+                <Volume2 className="h-3.5 w-3.5 text-[#f97316]" />
               ) : (
-                <VolumeX className="h-3 w-3" />
+                <VolumeX className="h-3.5 w-3.5 text-neutral-600" />
               )}
-              <span>
-                AUDIO:{" "}
-                <span className={audio ? "text-[#f97316] font-semibold" : "text-neutral-600"}>
-                  {audio ? "[ON]" : "[OFF]"}
-                </span>
+              <span>AUDIO:</span>
+              <span className={audio ? "text-[#f97316]" : "text-neutral-600"}>
+                {audio ? "[ON]" : "[OFF]"}
               </span>
             </button>
-
-            {/* Reloj local + nodo */}
-            <span className="hidden items-center gap-2 text-neutral-500 xl:inline-flex">
-              <span className="lolbit-dot h-1.5 w-1.5 rounded-full bg-[#f97316]" />
-              <span className="text-neutral-300 tabular-nums">{clock}</span>
-              <span className="text-neutral-600">// 0x7F</span>
-            </span>
           </div>
         </header>
 
-        {/* ══ TIPOGRAFÍA MONUMENTAL EDITORIAL ══ */}
-        <div className="pt-14 sm:pt-20">
+        {/* ══ TITULAR TIPOGRÁFICO REBALANCEADO ══ */}
+        <div>
           <div className="flex items-center gap-2 font-mono text-[11px] tracking-[0.35em] text-[#f97316] uppercase mb-3">
             <span className="lolbit-dot h-2 w-2 rounded-full bg-[#f97316]" />
             <span>AUTONOMOUS RUNTIME // SYS.GEN-18</span>
           </div>
-          <h1 className="font-[family-name:var(--font-bricolage)] font-black tracking-[-0.06em] text-white text-7xl sm:text-9xl md:text-[10rem] lg:text-[11.5rem] leading-[0.85] select-none uppercase drop-shadow-[0_10px_35px_rgba(0,0,0,0.8)]">
+          <h1 className="font-[family-name:var(--font-bricolage)] font-black tracking-[-0.04em] text-white text-5xl sm:text-7xl md:text-8xl select-none uppercase drop-shadow-[0_10px_35px_rgba(0,0,0,0.8)]">
             LOLBIT<span className="text-[#f97316]">.</span>
           </h1>
         </div>
 
-        {/* Sub-statement editorial (auténtico, humano y técnico) */}
-        <p className="max-w-4xl pt-6 text-lg sm:text-2xl md:text-[1.65rem] font-normal leading-relaxed text-neutral-300">
-          Programador autodidacta, femboy y entusiasta del caos digital. Construyo software, desmonto sockets y levanto arquitecturas más por la satisfacción de verlas funcionar que por cualquier otra cosa. Crecí entre físicas de radio-control en Re-Volt, madrugadas experimentando con layouts en Flutter y la vibra de estática CRT de Five Nights at Freddy’s. No me tomo la vida demasiado en serio, pero trato el código con precisión quirúrgica.
+        {/* Statement relajado, casual y genuino */}
+        <p className="max-w-2xl mt-4 mb-8 text-base sm:text-lg md:text-xl font-normal leading-relaxed text-neutral-300">
+          Simplemente un femboy mas que se la pasa programando por pura diversión, si una idea se me hace entretenida o tengo ganas de ver qué pasa al tocar algo, me pongo a picar código y ya. Jugador del mejor RC Racing de la historia, Re-Volt, y actualmente aprendiendo Flutter de gente experimentada de manera mas autodidacta. I don&apos;t larp Fnaf btw.
         </p>
 
-        {/* Micro-tags inferiores */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-4 pb-16 font-mono text-xs text-neutral-500">
-          <span className="text-neutral-400">[ AUTODIDACT // DART &amp; TYPESCRIPT ]</span>
+        {/* Micro-tags inferiores desenfadados */}
+        <div className="flex flex-wrap items-center gap-3 text-xs font-mono text-neutral-500">
+          <span className="text-neutral-400">[ SELF-TAUGHT ]</span>
           <span className="text-neutral-700">·</span>
-          <span className="text-neutral-400">[ RE-VOLT RC ENTHUSIAST ]</span>
+          <span className="text-neutral-400">[ FEMBOY ]</span>
           <span className="text-neutral-700">·</span>
-          <span className="text-neutral-400">[ ANALOG CRT VIBES ]</span>
+          <span className="text-neutral-400">[ RE-VOLT ENTHUSIAST ]</span>
           <span className="text-neutral-700">·</span>
-          <span className="text-neutral-400">[ CODE FOR JOY ]</span>
+          <span className="text-neutral-400">[ FNAF AESTHETICS ]</span>
+          <span className="text-neutral-700">·</span>
+          <span className="text-neutral-400">[ JUST FOR FUN ]</span>
         </div>
 
         {/* ══ TELEMETRÍA REAL DEL DISPOSITIVO DEL VISITANTE (HUD) ══ */}
-        <div className="mb-16 rounded-xl border border-neutral-800/80 bg-black/60 p-4 font-mono text-xs shadow-lg backdrop-blur-md">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-800/80 pb-3">
-            <span className="flex items-center gap-2 text-[10px] tracking-widest text-[#f97316] uppercase font-bold">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#f97316] animate-pulse" />
-              CLIENT TELEMETRY // REAL HARDWARE FEED
-            </span>
-            <span className="text-[10px] text-neutral-500 tracking-wider">
-              ZERO MOCK DATA • VERIFIED HARDWARE
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-3 pt-3 text-[11px] sm:grid-cols-4 md:grid-cols-5">
-            <div>
-              <p className="text-[9px] text-neutral-500 uppercase tracking-widest">Platform / OS</p>
-              <p className="font-semibold text-white truncate">{telemetry.os}</p>
+        <div className="mt-16 mb-20 border-t border-neutral-900/80 pt-10">
+          <div className="rounded-xl border border-neutral-800/80 bg-black/60 p-4 font-mono text-xs shadow-lg backdrop-blur-md">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-800/80 pb-3">
+              <span className="flex items-center gap-2 text-[10px] tracking-widest text-[#f97316] uppercase font-bold">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#f97316] animate-pulse" />
+                CLIENT TELEMETRY // REAL HARDWARE FEED
+              </span>
+              <span className="text-[10px] text-neutral-500 tracking-wider">
+                ZERO MOCK DATA • VERIFIED HARDWARE
+              </span>
             </div>
-            <div>
-              <p className="text-[9px] text-neutral-500 uppercase tracking-widest">Display</p>
-              <p className="font-semibold text-white truncate">
-                {telemetry.resolution} <span className="text-neutral-500 font-normal">@{telemetry.pixelRatio}x</span>
-              </p>
+            <div className="grid grid-cols-2 gap-3 pt-3 text-[11px] sm:grid-cols-4 md:grid-cols-5">
+              <div>
+                <p className="text-[9px] text-neutral-500 uppercase tracking-widest">Platform / OS</p>
+                <p className="font-semibold text-white truncate">{telemetry.os}</p>
+              </div>
+              <div>
+                <p className="text-[9px] text-neutral-500 uppercase tracking-widest">Display</p>
+                <p className="font-semibold text-white truncate">
+                  {telemetry.resolution} <span className="text-neutral-500 font-normal">@{telemetry.pixelRatio}x</span>
+                </p>
+              </div>
+              <div>
+                <p className="text-[9px] text-neutral-500 uppercase tracking-widest">CPU Cores</p>
+                <p className="font-semibold text-white">{telemetry.cores} Logic Cores</p>
+              </div>
+              <div>
+                <p className="text-[9px] text-neutral-500 uppercase tracking-widest">Memory</p>
+                <p className="font-semibold text-white">{telemetry.memory}</p>
+              </div>
+              <div className="col-span-2 sm:col-span-4 md:col-span-1">
+                <p className="text-[9px] text-neutral-500 uppercase tracking-widest">Latency / Ping</p>
+                <p className="font-semibold text-[#f97316]">
+                  {telemetry.latencyMs !== null ? `${telemetry.latencyMs}ms` : "Measuring..."}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-[9px] text-neutral-500 uppercase tracking-widest">CPU Cores</p>
-              <p className="font-semibold text-white">{telemetry.cores} Logic Cores</p>
+            <div className="mt-2.5 pt-2.5 border-t border-neutral-900 flex items-center justify-between text-[10px] text-neutral-500">
+              <span className="truncate max-w-full">
+                GPU: <span className="text-emerald-400/90">{telemetry.gpu}</span>
+              </span>
+              <span className="shrink-0 pl-2">VP: {telemetry.viewport}</span>
             </div>
-            <div>
-              <p className="text-[9px] text-neutral-500 uppercase tracking-widest">Memory</p>
-              <p className="font-semibold text-white">{telemetry.memory}</p>
-            </div>
-            <div className="col-span-2 sm:col-span-4 md:col-span-1">
-              <p className="text-[9px] text-neutral-500 uppercase tracking-widest">Latency / Ping</p>
-              <p className="font-semibold text-[#f97316]">
-                {telemetry.latencyMs !== null ? `${telemetry.latencyMs}ms (Asset RTT)` : "Measuring..."}
-              </p>
-            </div>
-          </div>
-          <div className="mt-2.5 pt-2.5 border-t border-neutral-900 flex items-center justify-between text-[10px] text-neutral-500">
-            <span className="truncate max-w-full">
-              GPU: <span className="text-emerald-400/90">{telemetry.gpu}</span>
-            </span>
-            <span className="shrink-0 pl-2">VP: {telemetry.viewport}</span>
           </div>
         </div>
 
