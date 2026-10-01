@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { Member } from "@/data/members";
-import { X } from "lucide-react";
+import { X, GripVertical } from "lucide-react";
 import { SoundButton } from "@/components/fx";
 
 /* ── CSS dinámico ─────────────────────────────────────────── */
@@ -34,6 +34,14 @@ const FX_STYLES = `
   35% { background: #000; }
   45% { background: #FFF; }
   60% { background: #000; }
+}
+@keyframes pip-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes pip-eq {
+  0%, 100% { transform: scaleY(0.25); }
+  50% { transform: scaleY(1); }
 }
 @keyframes grid-drift-cyber {
   0%   { background-position: 0 0; }
@@ -75,6 +83,8 @@ const FX_STYLES = `
 }
 .title-flicker { animation: title-flicker 4s linear infinite; }
 .reboot-flash { animation: reboot-flash 0.8s ease-out forwards; }
+.pip-spin { animation: pip-spin 4s linear infinite; }
+.pip-eq-bar { animation: pip-eq 0.9s ease-in-out infinite; transform-origin: bottom; }
 
 /* Windows 98 border groove */
 .win98-inset {
@@ -181,6 +191,11 @@ export function Darth10Profile({ member }: { member: Member }) {
   const nextId = useRef(4);
   const zCounter = useRef(10);
   const dragRef = useRef<{ id: number; offX: number; offY: number } | null>(null);
+  const pipRef = useRef<HTMLDivElement>(null);
+  const pipPos = useRef<{ x: number; y: number } | null>(null);
+  const pipDrag = useRef<{ offX: number; offY: number } | null>(null);
+  const [minimized, setMinimized] = useState(false);
+  const [pipDragging, setPipDragging] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -280,6 +295,66 @@ export function Darth10Profile({ member }: { member: Member }) {
     document.addEventListener("pointerup", onUp);
   };
 
+  /* ── PIP Spotify: libremente desplazable (arrastre nativo) ── */
+  const clampPip = (x: number, y: number, el: HTMLElement) => {
+    const pad = 8;
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    return {
+      x: Math.max(pad, Math.min(x, window.innerWidth - w - pad)),
+      y: Math.max(pad, Math.min(y, window.innerHeight - h - pad)),
+    };
+  };
+
+  const pipHandleDown = (e: React.PointerEvent) => {
+    if ((e.target as HTMLElement).closest("[data-no-drag]")) return;
+    const el = pipRef.current;
+    if (!el) return;
+    if (!pipPos.current) {
+      const r = el.getBoundingClientRect();
+      pipPos.current = { x: r.left, y: r.top };
+    }
+    e.preventDefault();
+    pipDrag.current = {
+      offX: e.clientX - pipPos.current.x,
+      offY: e.clientY - pipPos.current.y,
+    };
+    setPipDragging(true);
+    const onMove = (ev: PointerEvent) => {
+      if (!pipDrag.current) return;
+      const next = clampPip(
+        ev.clientX - pipDrag.current.offX,
+        ev.clientY - pipDrag.current.offY,
+        el
+      );
+      pipPos.current = next;
+      el.style.left = `${next.x}px`;
+      el.style.top = `${next.y}px`;
+    };
+    const onUp = () => {
+      pipDrag.current = null;
+      setPipDragging(false);
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onUp);
+    };
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", onUp);
+  };
+
+  // Posición inicial (esquina inferior derecha) y clamp tras cambiar de modo
+  useEffect(() => {
+    const el = pipRef.current;
+    if (!el) return;
+    if (!pipPos.current) {
+      const r = el.getBoundingClientRect();
+      pipPos.current = { x: r.left, y: r.top };
+    }
+    const n = clampPip(pipPos.current.x, pipPos.current.y, el);
+    pipPos.current = n;
+    el.style.left = `${n.x}px`;
+    el.style.top = `${n.y}px`;
+  }, [mounted, minimized]);
+
   if (rebooting) {
     return (
       <main className={`fixed inset-0 z-[999] bg-black font-mono text-green-400 p-6 text-xs leading-relaxed overflow-hidden ${rebootDone ? "reboot-flash" : ""}`}>
@@ -376,33 +451,116 @@ export function Darth10Profile({ member }: { member: Member }) {
         DESCONECTAR
       </SoundButton>
 
-      {/* ── Reproductor de Spotify Embed // Esquina Inferior Derecha ── */}
+      {/* ── Reproductor de Spotify PIP // Flotante y libremente desplazable ── */}
       {mounted && (
-        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 w-[calc(100vw-2rem)] sm:w-[400px] max-w-md rounded-xl overflow-hidden border border-cyan-900/50 bg-black/85 p-3 shadow-[0_0_25px_rgba(6,182,212,0.18)] backdrop-blur-md transition-all duration-300">
-          <div className="text-[10px] font-mono text-cyan-400 mb-2 px-1 flex items-center justify-between tracking-wider select-none">
-            <span className="flex items-center gap-2">
-              <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-              [ CONSOLE AUDIO FEED // DARTH.10 MIX ]
-            </span>
-            <button
-              type="button"
-              onClick={() => setExpanded((prev) => !prev)}
-              className="text-xs text-neutral-400 hover:text-cyan-300 font-mono transition-colors cursor-pointer select-none"
-              title={expanded ? "Modo compacto (152px)" : "Ver lista completa (352px)"}
+        <div
+          ref={pipRef}
+          className={`fixed bottom-4 right-4 z-40 w-[calc(100vw-2rem)] sm:right-6 sm:bottom-6 sm:w-[400px] max-w-md select-none ${
+            pipDragging ? "pointer-events-none" : ""
+          }`}
+          style={{ left: pipPos.current?.x, top: pipPos.current?.y, willChange: "left, top" }}
+        >
+          {minimized ? (
+            /* ── Modo píldora compacta (disco giratorio + ecualizador) ── */
+            <div
+              className="cursor-grab active:cursor-grabbing"
+              onPointerDown={pipHandleDown}
+              style={{ touchAction: "none" }}
             >
-              SPOTIFY EMBED {expanded ? "▲" : "▼"}
-            </button>
-          </div>
-          <iframe
-            style={{ borderRadius: "12px" }}
-            src="https://open.spotify.com/embed/playlist/6r0mw8mYkDRCyiDL4YVVC2?utm_source=generator&theme=0"
-            width="100%"
-            height={expanded ? "352" : "152"}
-            frameBorder="0"
-            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-            loading="lazy"
-            title="Darth.10 Spotify Playlist"
-          />
+              <div className="flex items-center gap-3 rounded-full border border-white/10 bg-neutral-950/85 py-1.5 pl-1.5 pr-2 shadow-2xl backdrop-blur-xl">
+                <span className="pip-spin relative block h-10 w-10 shrink-0 rounded-full border border-cyan-900/60 bg-black shadow-[0_0_18px_rgba(6,182,212,0.3)]">
+                  <span
+                    aria-hidden
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background:
+                        "repeating-radial-gradient(circle at 50% 50%, #0a4038 0px, #0a4038 1px, #072e2a 1px, #072e2a 3px)",
+                    }}
+                  />
+                  <span
+                    aria-hidden
+                    className="absolute inset-0 m-auto h-1.5 w-1.5 rounded-full bg-cyan-400"
+                  />
+                </span>
+                <span className="flex h-6 items-center gap-[3px]">
+                  {[0, 1, 2, 3].map((i) => (
+                    <span
+                      key={i}
+                      aria-hidden
+                      className="pip-eq-bar inline-block h-4 w-[3px] rounded-sm bg-green-400/90"
+                      style={{ animationDelay: `${i * 0.13}s` }}
+                    />
+                  ))}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-[10px] font-mono tracking-widest text-cyan-300/90">
+                  DARTH.10 MIX
+                </span>
+                <button
+                  type="button"
+                  data-no-drag
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMinimized(false);
+                  }}
+                  className="shrink-0 cursor-pointer rounded-full border border-cyan-900/60 bg-black/50 px-1.5 py-0.5 text-[11px] leading-none text-cyan-300 transition-colors hover:text-white"
+                  title="Expandir reproductor"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* ── Modo completo: carátula, título y embed ── */
+            <div className="overflow-hidden rounded-2xl border border-white/10 bg-neutral-950/85 p-3 shadow-2xl backdrop-blur-xl">
+              <header
+                className="flex cursor-grab select-none items-center justify-between gap-2 px-1 pb-2 font-mono text-[10px] tracking-wider text-cyan-400 active:cursor-grabbing"
+                onPointerDown={pipHandleDown}
+                style={{ touchAction: "none" }}
+              >
+                <span className="flex items-center gap-2">
+                  <GripVertical className="h-3.5 w-3.5 text-cyan-500/70" />
+                  <span className="inline-block h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
+                  [ CONSOLE AUDIO FEED // DARTH.10 MIX ]
+                </span>
+                <span className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    data-no-drag
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMinimized(true);
+                    }}
+                    className="cursor-pointer select-none rounded border border-cyan-900/60 bg-black/50 px-1.5 py-0.5 text-xs leading-none text-neutral-400 transition-colors hover:text-cyan-300"
+                    title="Minimizar a píldora compacta"
+                  >
+                    −
+                  </button>
+                  <button
+                    type="button"
+                    data-no-drag
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpanded((prev) => !prev);
+                    }}
+                    className="cursor-pointer select-none rounded border border-cyan-900/60 bg-black/50 px-1.5 py-0.5 text-xs leading-none text-neutral-400 transition-colors hover:text-cyan-300"
+                    title={expanded ? "Modo compacto (152px)" : "Ver lista completa (352px)"}
+                  >
+                    {expanded ? "▲" : "▼"}
+                  </button>
+                </span>
+              </header>
+              <iframe
+                style={{ borderRadius: "12px" }}
+                src="https://open.spotify.com/embed/playlist/6r0mw8mYkDRCyiDL4YVVC2?utm_source=generator&theme=0"
+                width="100%"
+                height={expanded ? "352" : "152"}
+                frameBorder="0"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"
+                title="Darth.10 Spotify Playlist"
+              />
+            </div>
+          )}
         </div>
       )}
 
