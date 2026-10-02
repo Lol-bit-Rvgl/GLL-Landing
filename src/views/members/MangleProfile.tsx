@@ -277,6 +277,7 @@ export function MangleProfile({ member }: { member?: Member }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [copiedDiscord, setCopiedDiscord] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
 
   // FNAF Minijuego "Reconstruct Mangle"
   const [assembledPieces, setAssembledPieces] = useState<string[]>([]);
@@ -310,7 +311,7 @@ export function MangleProfile({ member }: { member?: Member }) {
   // Manejo del reproductor musical
   useEffect(() => {
     if (!mounted) return;
-    const audio = new Audio("/images/members/mangle/audio.mp3");
+    const audio = new Audio("/images/members/Mangle/audio.mp3");
     audio.loop = true;
     audio.volume = 0.4;
     audioRef.current = audio;
@@ -334,8 +335,8 @@ export function MangleProfile({ member }: { member?: Member }) {
         .then(() => {
           setIsPlaying(true);
         })
-        .catch(() => {
-          // Bloqueo de autoplay por navegador
+        .catch((err) => {
+          console.warn("Autoplay prevented:", err);
         });
     }
   }, [isPlaying]);
@@ -414,7 +415,7 @@ export function MangleProfile({ member }: { member?: Member }) {
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/images/members/mangle/bg.jpg"
+          src="/images/members/Mangle/bg.jpg"
           alt="Cielo Estrellado Nocturno"
           className="w-full h-full object-cover object-center opacity-75 scale-[1.02]"
         />
@@ -495,12 +496,35 @@ export function MangleProfile({ member }: { member?: Member }) {
           <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-pink-500/30 via-purple-600/20 to-pink-400/30 blur-xl opacity-80 group-hover:opacity-100 transition-opacity" />
 
           <div className="relative size-36 sm:size-44 mx-auto rounded-full overflow-hidden p-1 border-2 border-pink-400/50 shadow-[0_0_35px_rgba(236,72,153,0.4)] animate-neon-pulse bg-zinc-950/80">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/members/mangle/avatar.jpg"
-              alt="Mangle Drake Avatar"
-              className="w-full h-full object-cover rounded-full transition-transform duration-500 group-hover:scale-105"
-            />
+            {avatarError ? (
+              /* Placeholder elegante si la imagen falla */
+              <div className="relative w-full h-full rounded-full bg-[#0c0712] flex items-center justify-center overflow-hidden">
+                <div
+                  aria-hidden
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "radial-gradient(circle at 30% 30%, rgba(236,72,153,0.4) 0%, rgba(168,85,247,0.15) 45%, transparent 70%)",
+                  }}
+                />
+                <span
+                  aria-hidden
+                  className="absolute inset-0 rounded-full animate-pulse"
+                  style={{ boxShadow: "inset 0 0 40px rgba(236,72,153,0.25)" }}
+                />
+                <span className="relative font-black text-5xl tracking-tighter bg-gradient-to-br from-pink-300 via-pink-400 to-fuchsia-500 bg-clip-text text-transparent drop-shadow-[0_0_22px_rgba(236,72,153,0.9)]">
+                  MD
+                </span>
+              </div>
+            ) : (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src="/images/members/Mangle/avatar.jpg"
+                alt="Mangle Drake Avatar"
+                onError={() => setAvatarError(true)}
+                className="w-full h-full object-cover rounded-full transition-transform duration-500 group-hover:scale-105"
+              />
+            )}
             {/* Brillo reflectivo de cristal líquido */}
             <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/10 to-pink-300/20 pointer-events-none" />
           </div>
