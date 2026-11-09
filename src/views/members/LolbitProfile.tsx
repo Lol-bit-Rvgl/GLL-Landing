@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Member } from "@/data/members";
+import { useLanyard } from "@/lib/lanyard";
 import {
   ArrowLeft,
   ChevronDown,
@@ -551,64 +552,6 @@ function IndexRow({
 }
 
 /* ══════════════════════════════════════════════════════════════
-   LANYARD LIVE PRESENCE HOOK
-   ══════════════════════════════════════════════════════════════ */
-interface LanyardSpotify {
-  track_id: string;
-  song: string;
-  artist: string;
-  album_art_url: string;
-  album?: string;
-}
-
-interface LanyardActivity {
-  type: number;
-  name: string;
-  state?: string;
-  details?: string;
-  id?: string;
-}
-
-interface LanyardData {
-  discord_status: "online" | "idle" | "dnd" | "offline";
-  activities: LanyardActivity[];
-  listening_to_spotify: boolean;
-  spotify: LanyardSpotify | null;
-}
-
-function useLanyard(userId: string) {
-  const [data, setData] = useState<LanyardData | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    let active = true;
-
-    const fetchPresence = async () => {
-      try {
-        const res = await fetch(`https://api.lanyard.rest/v1/users/${userId}`);
-        if (!res.ok) return;
-        const json = await res.json();
-        if (active && json.success && json.data) {
-          setData(json.data);
-        }
-      } catch {
-        // Fallback en caso de error
-      }
-    };
-
-    fetchPresence();
-    const id = setInterval(fetchPresence, 15000);
-    return () => {
-      active = false;
-      clearInterval(id);
-    };
-  }, [userId]);
-
-  return { data, mounted };
-}
-
-/* ══════════════════════════════════════════════════════════════
    REAL VISITOR HARDWARE & NETWORK TELEMETRY
    ══════════════════════════════════════════════════════════════ */
 interface DeviceTelemetry {
@@ -932,7 +875,7 @@ export function LolbitProfile({ member }: { member: Member }) {
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   const telemetry = useDeviceTelemetry();
-  const { data: lanyardData } = useLanyard("1066501844177797171");
+  const { data: lanyardData } = useLanyard(member.integrations?.lanyardUserId);
   const lanyardIsLive = mounted && lanyardData?.discord_status && lanyardData.discord_status !== "offline";
 
   const activeGameOrCode = lanyardData?.activities?.find(

@@ -201,7 +201,10 @@ export function HaterProfile({ member }: { member: Member }) {
           </div>
           <iframe
             style={{ borderRadius: "12px" }}
-            src="https://open.spotify.com/embed/album/335oq3WJCd1U5GQJBwdmkd?utm_source=generator&theme=0"
+            src={
+              member.integrations?.spotifyEmbedUrl ??
+              "https://open.spotify.com/embed/album/335oq3WJCd1U5GQJBwdmkd?utm_source=generator&theme=0"
+            }
             width="100%"
             height="152"
             frameBorder="0"

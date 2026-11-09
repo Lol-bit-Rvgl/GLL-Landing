@@ -551,7 +551,10 @@ export function Darth10Profile({ member }: { member: Member }) {
               </header>
               <iframe
                 style={{ borderRadius: "12px" }}
-                src="https://open.spotify.com/embed/playlist/6r0mw8mYkDRCyiDL4YVVC2?utm_source=generator&theme=0"
+                src={
+                  member.integrations?.spotifyEmbedUrl ??
+                  "https://open.spotify.com/embed/playlist/6r0mw8mYkDRCyiDL4YVVC2?utm_source=generator&theme=0"
+                }
                 width="100%"
                 height={expanded ? "352" : "152"}
                 frameBorder="0"
