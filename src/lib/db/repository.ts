@@ -3,7 +3,7 @@
  *
  * Esta capa abstrae el origen de datos para permitir migraciones futuras.
  *
- * Enviroment Selection Strategy:
+ * Environment Selection Strategy:
  * - Development (NODE_ENV=development): JSON permitido como fallback
  * - Preview (VERCEL && !VERCEL_ENV=production): PostgreSQL de pruebas recomendado
  * - Production (VERCEL_ENV=production): PostgreSQL OBLIGATORIO, error si no configurado
@@ -20,21 +20,17 @@ import { writeFile, readFile } from "fs/promises";
 import { join } from "path";
 
 // ============================================================
-// CONFIGURACIÓN DE ENTORNO
+// CONFIGURACIÓN DE ENTORNO (lazy evaluation)
 // ============================================================
 
-const isDevelopment = process.env.NODE_ENV === "development";
-const isProduction = process.env.VERCEL_ENV === "production";
-const hasPostgresConfig = Boolean(
-  process.env.POSTGRES_URL ||
-  process.env.NEXT_PUBLIC_SUPABASE_URL
-);
-
-// En producción, PostgreSQL es obligatorio
-const isPostgresRequired = isProduction;
-
-// Determinar si usar PostgreSQL o JSON
-const usePostgres = hasPostgresConfig || (!isPostgresRequired && isDevelopment);
+function checkPostgresConfig(): { isProduction: boolean; hasPostgresConfig: boolean } {
+  const isProduction = process.env.VERCEL_ENV === "production";
+  const hasPostgresConfig = Boolean(
+    process.env.POSTGRES_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL
+  );
+  return { isProduction, hasPostgresConfig };
+}
 
 // ============================================================
 // CONSTANTES Y UTILIDADES COMPARTIDAS
@@ -76,17 +72,6 @@ function getDefaultTheme(): Member["theme"] {
       statusColor: "#10b981",
     },
   };
-}
-
-// ============================================================
-// VERIFICACIÓN DE CONFIGURACIÓN
-// ============================================================
-
-if (isProduction && !hasPostgresConfig) {
-  throw new Error(
-    "[MemberRepository] ERROR: PostgreSQL es obligatorio en producción. " +
-    "Configurar NEXT_PUBLIC_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY."
-  );
 }
 
 // ============================================================
@@ -264,14 +249,26 @@ const jsonRepo = new JSONRepository();
 class PostgreSQLRepository {
   private client: any = null;
 
+  /**
+   * Lazy initialization - verifica PostgreSQL sólo cuando se recibe una petición
+   */
   private ensureClient() {
     if (this.client) return this.client;
-    if (!hasPostgresConfig) {
+
+    const { isProduction, hasPostgresConfig } = checkPostgresConfig();
+
+    // En producción, PostgreSQL es obligatorio - verificación lazy
+    if (isProduction && !hasPostgresConfig) {
       throw new Error(
-        "Supabase no configurado. En producción, es obligatorio configurar " +
-        "NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY."
+        "[MemberRepository] ERROR: PostgreSQL es obligatorio en producción. " +
+        "Configurar NEXT_PUBLIC_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY."
       );
     }
+
+    if (!hasPostgresConfig) {
+      throw new Error("Supabase no configurado");
+    }
+
     const { getSupabaseServiceClient } = require("./supabase");
     const client = getSupabaseServiceClient();
     if (!client) {
@@ -281,51 +278,50 @@ class PostgreSQLRepository {
     return this.client;
   }
 
-  private toDbMember(member: Partial<Member> & { slug: string }): Record<string, unknown> {
+  private toDbMember(member: Partial<Member> & { slug: string }): Record<string, any> {
+    const socialLinks: Record<string, any> = {
+      discord: member.discord,
+      ...(member.links && member.links.length > 0 ? { links: member.links } : {}),
+      ...(member.integrations ? { integrations: member.integrations } : {}),
+    };
+
     return {
       slug: member.slug,
-      display_name: member.displayName,
+      name: member.displayName,
       role: member.role,
-      status: member.status,
-      quote: member.quote,
-      is_leader: member.isLeader,
-      discord: member.discord,
+      bio: member.description,
       avatar: member.avatar,
-      description: member.description,
-      tags: member.tags,
       faction: member.faction,
-      sort_order: member.order,
-      card_size: member.cardSize,
-      visible: member.visible,
+      social_links: socialLinks,
       theme: member.theme,
-      links: member.links || [],
-      seo: member.seo || { title: member.displayName, description: "Member of GLL" },
-      integrations: member.integrations,
-      experience: member.experience || { component: "default", kind: "interactive", capabilities: [] },
+      experience: member.experience,
+      visible: member.visible !== false,
     };
   }
 
-  private fromDbRow(row: Record<string, unknown>): Member {
+  private fromDbRow(row: any): Member {
+    const socialLinks = row.social_links || {};
+
     return {
-      slug: row.slug as string,
-      displayName: row.display_name as string,
-      role: row.role as string,
-      status: row.status as string | undefined,
-      quote: row.quote as string | undefined,
-      isLeader: row.is_leader as boolean | undefined,
-      discord: row.discord as string | undefined,
-      avatar: row.avatar as { src: string; alt?: string; frame?: string },
-      description: row.description as string | undefined,
-      tags: row.tags as string[] | undefined,
-      faction: row.faction as MemberFaction,
-      order: row.sort_order as number,
-      cardSize: row.card_size as "compact" | "wide",
-      visible: row.visible as boolean,
-      theme: row.theme as Member["theme"],
-      links: (row.links as MemberLink[]) || [],
-      seo: (row.seo as MemberSeo) || { title: row.display_name as string, description: "Member of GLL" },
-      integrations: row.integrations as MemberIntegrations | undefined,
-      experience: (row.experience as Member["experience"]) || { component: "default", kind: "interactive", capabilities: [] },
+      slug: row.slug,
+      displayName: row.name || row.display_name || row.slug,
+      role: row.role,
+      status: row.status || undefined,
+      quote: socialLinks.quote,
+      isLeader: socialLinks.is_leader,
+      discord: socialLinks.discord,
+      avatar: row.avatar,
+      description: row.bio || row.description || undefined,
+      tags: row.tags || undefined,
+      faction: row.faction,
+      order: row.sort_order,
+      cardSize: row.card_size,
+      visible: row.visible,
+      theme: row.theme,
+      links: socialLinks.links || [],
+      seo: row.seo || { title: row.name || row.slug, description: "Member of GLL" },
+      integrations: socialLinks.integrations || undefined,
+      experience: row.experience || { component: "default", kind: "interactive", capabilities: [] },
     };
   }
 
@@ -336,7 +332,7 @@ class PostgreSQLRepository {
         .from("members")
         .select("*")
         .eq("visible", true)
-        .order("sort_order", { ascending: true });
+        .order("id", { ascending: true });
 
       if (error) {
         console.error("[PostgreSQL] Error cargando miembros:", error.message);
@@ -383,20 +379,54 @@ class PostgreSQLRepository {
   async update(slug: string, data: Partial<Member>): Promise<Member | null> {
     const client = this.ensureClient();
 
-    const updateData: Record<string, unknown> = { ...data, updated_at: new Date().toISOString() };
+    const updateData: Record<string, any> = { ...data, updated_at: new Date().toISOString() };
     delete updateData.slug;
     delete updateData.experience;
+
     if (updateData.displayName) {
-      updateData.display_name = updateData.displayName;
+      updateData.name = updateData.displayName;
       delete updateData.displayName;
     }
+
     if (updateData.cardSize !== undefined) {
       updateData.card_size = updateData.cardSize;
       delete updateData.cardSize;
     }
+
     if (updateData.sortOrder !== undefined) {
       updateData.sort_order = updateData.sortOrder;
       delete updateData.sortOrder;
+    }
+
+    // Manejar social_links como JSONB
+    if (updateData.discord !== undefined || updateData.links !== undefined || updateData.integrations !== undefined) {
+      const existing = await this.getBySlug(slug);
+      const existingSocialLinks = existing?.social_links || {};
+
+      updateData.social_links = {
+        ...existingSocialLinks,
+        ...(updateData.discord !== undefined ? { discord: updateData.discord } : {}),
+        ...(updateData.links !== undefined ? { links: updateData.links } : {}),
+        ...(updateData.integrations !== undefined ? { integrations: updateData.integrations } : {}),
+      };
+
+      delete updateData.discord;
+      delete updateData.links;
+      delete updateData.integrations;
+    }
+
+    if (updateData.theme !== undefined || updateData.seo !== undefined) {
+      const existing = await this.getBySlug(slug);
+      const existingSocialLinks = existing?.social_links || {};
+
+      updateData.social_links = {
+        ...existingSocialLinks,
+        ...(updateData.theme !== undefined ? { theme: updateData.theme } : {}),
+        ...(updateData.seo !== undefined ? { seo: updateData.seo } : {}),
+      };
+
+      delete updateData.theme;
+      delete updateData.seo;
     }
 
     const { data: updated, error } = await client
@@ -475,7 +505,7 @@ class PostgreSQLRepository {
         .from("members")
         .select("*")
         .eq("visible", true)
-        .ilike("display_name", `%${query}%`);
+        .ilike("name", `%${query}%`);
 
       if (error) return [];
       return (data || []).map((row: Record<string, unknown>) => this.fromDbRow(row));
@@ -498,13 +528,12 @@ class PostgreSQLRepository {
       const client = this.ensureClient();
       const { data, error } = await client
         .from("site_settings")
-        .select("settings")
-        .order("updated_at", { ascending: false })
-        .limit(1)
+        .select("value")
+        .eq("key", "main_config")
         .single();
 
       if (error) return {};
-      return data?.settings || {};
+      return (data?.value as any) || {};
     } catch (e) {
       console.error("[PostgreSQL] Error obteniendo settings:", e);
       return {};
@@ -514,22 +543,23 @@ class PostgreSQLRepository {
   async saveSettings(settings: { siteName?: string; slogan?: string; description?: string; discord?: string }): Promise<boolean> {
     try {
       const client = this.ensureClient();
+
       const { data: existing } = await client
         .from("site_settings")
-        .select("id")
-        .limit(1)
+        .select("key")
+        .eq("key", "main_config")
         .single();
 
-      if (existing?.id) {
+      if (existing?.key) {
         const { error } = await client
           .from("site_settings")
-          .update({ settings })
-          .eq("id", existing.id);
+          .update({ value: settings })
+          .eq("key", "main_config");
         return !error;
       } else {
         const { error } = await client
           .from("site_settings")
-          .insert({ settings });
+          .insert({ key: "main_config", value: settings });
         return !error;
       }
     } catch (e) {
@@ -546,7 +576,14 @@ const postgresRepo = new PostgreSQLRepository();
 // ============================================================
 
 export class MemberRepository {
-  private usePostgres = usePostgres;
+  private usePostgres: boolean;
+
+  constructor() {
+    const config = checkPostgresConfig();
+    const isDevelopment = process.env.NODE_ENV === "development";
+    const isPostgresRequired = config.isProduction;
+    this.usePostgres = config.hasPostgresConfig || (!isPostgresRequired && isDevelopment);
+  }
 
   async getAll(): Promise<Member[]> {
     return this.usePostgres ? postgresRepo.getAll() : jsonRepo.getAll();

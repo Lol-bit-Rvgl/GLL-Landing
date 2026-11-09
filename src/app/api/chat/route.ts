@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from "next/server";
 
 const SYSTEM_PROMPT = `Eres Lolbit (D-AVAR // Dark Autonomous Virtual Assistant Runtime), una entidad digital autónoma e interactiva, alter-ego e inteligencia del desarrollador.

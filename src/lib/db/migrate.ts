@@ -248,14 +248,17 @@ async function verifyMigration(client: any): Promise<void> {
     });
   }
 
-  const { data: settings } = await client.from("site_settings").select("key, value, created_at, updated_at").eq("key", "main_config");
+  const { data: settings, error: settingsError } = await client
+    .from("site_settings")
+    .select("key, value")
+    .eq("key", "main_config");
 
-  if (settings && (settings as any[]).length > 0) {
+  if (settingsError) {
+    console.log(`[Migrate] Settings NO encontrados (error: ${settingsError.message})`);
+  } else if (settings && (settings as any[]).length > 0) {
     const s = (settings as any[])[0];
     console.log(`[Migrate] Settings encontrados:`);
     console.log(`  - Nombre: ${s.value?.siteName}`);
-    console.log(`  - Creado: ${s.created_at}`);
-    console.log(`  - Actualizado: ${s.updated_at}`);
   } else {
     console.log(`[Migrate] Settings NO encontrados`);
   }
